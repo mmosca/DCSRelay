@@ -1,0 +1,75 @@
+﻿<Window
+        x:Class="DCSRelay.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DCSRelay"
+        xmlns:vm="clr-namespace:DCSRelay.ViewModels"
+        xmlns:services="clr-namespace:DCSRelay.Services"
+        mc:Ignorable="d"
+        Title="DCS Relay" Height="450" Width="800"
+        Closing="MainWindow_Closing"
+        StateChanged="MainWindow_StateChanged">
+    <DockPanel LastChildFill="True">
+        <!-- Status Bar at the bottom -->
+        <StatusBar DockPanel.Dock="Bottom" Height="30" Background="#F0F0F0">
+            <StatusBarItem>
+                <TextBlock Text="Multicast Bytes Received:" FontWeight="Bold" Margin="5,0,10,0"/>
+            </StatusBarItem>
+            <StatusBarItem>
+                <TextBlock Text="{Binding BytesReceivedOnMulticast, StringFormat='0,0'}" Foreground="Blue" FontWeight="Bold" Margin="0,0,20,0"/>
+            </StatusBarItem>
+            <Separator />
+            <StatusBarItem HorizontalAlignment="Right">
+                <TextBlock Text="{Binding RelayServiceStatus}" Margin="5,0,5,0" Foreground="Green"/>
+            </StatusBarItem>
+        </StatusBar>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Label Content="Available Serial Ports:" Grid.Row="0" Grid.Column="0" FontWeight="Bold"/>
+
+            <!-- Available Ports List -->
+            <ListBox x:Name="availableList"
+                     Grid.Row="1" Grid.Column="0"
+                     ItemsSource="{Binding AvailablePorts}"
+                     SelectionMode="Extended"
+                     SelectionChanged="OnAvailableListSelectionChanged"/>
+
+            <!-- Move Buttons -->
+            <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="1">
+               <Button Content="&#xF0D6;"
+                        Command="{Binding MovePortRightCommand}"
+                        Margin="5"
+                        FontSize="18"
+                        Width="32"
+                        Height="32" FontFamily="Segoe MDL2 Assets"/>
+                <Button Content="&#xF0D5;"
+                        Command="{Binding MovePortLeftCommand}"
+                        Margin="5"
+                        FontSize="18"
+                        Width="32"
+                        Height="32" FontFamily="Segoe MDL2 Assets"/>
+ 
+            </StackPanel>
+
+            <!-- Active Ports List -->
+            <Label Content="DCSBios Serial Ports:" Grid.Row="0" Grid.Column="2" FontWeight="Bold"/>
+            <ListBox x:Name="activeList"
+                     Grid.Row="1" Grid.Column="2"
+                     ItemsSource="{Binding ActivePorts}"
+                     SelectionMode="Extended"
+                     SelectionChanged="OnActiveListSelectionChanged"/>
+        </Grid>
+    </DockPanel>
+</Window>

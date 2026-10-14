@@ -1,0 +1,6 @@
+ {
+	 "model":  "gemma4",
+	 "options": {
+		 "num_ctx": 64000
+	 }
+ } 

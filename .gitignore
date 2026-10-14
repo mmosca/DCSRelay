@@ -1,0 +1,7 @@
+bin/
+obj/
+.fake
+.*~
+*.swp
+*.bak
+.vs
