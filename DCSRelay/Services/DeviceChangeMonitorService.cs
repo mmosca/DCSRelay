@@ -72,7 +72,7 @@ namespace DCSRelay.Services
                 System.Diagnostics.Debug.WriteLine("Device change detected - refreshing serial ports.");
 
                 // Refresh ports on the UI thread
-                Application.Current?.Dispatcher?.Invoke(async () =>
+                System.Windows.Application.Current?.Dispatcher?.Invoke(async () =>
                 {
                     if (_viewModel != null)
                     {
@@ -103,7 +103,7 @@ namespace DCSRelay.Services
                     // Update available ports keeping previously selected items
                     var selectedPorts = new System.Collections.Generic.List<Models.HardwareDeviceInfo>(_viewModel.SelectedAvailablePorts);
 
-                    Application.Current?.Dispatcher?.Invoke(() =>
+                    System.Windows.Application.Current?.Dispatcher?.Invoke(() =>
                     {
                         // Find ports that are no longer available
                         var portsToRemove = new System.Collections.Generic.List<Models.HardwareDeviceInfo>();

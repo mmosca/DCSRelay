@@ -132,7 +132,7 @@ namespace DCSRelay.ViewModels
         private void OnDataRelayed(object? sender, RelayEventArgs e)
         {
             // Update bytes counter from the UI thread
-            Application.Current.Dispatcher.Invoke(() =>
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
                 BytesReceivedOnMulticast += e.BytesRelayed;
             });
@@ -140,7 +140,7 @@ namespace DCSRelay.ViewModels
 
         private void OnRelayServiceError(object? sender, System.IO.ErrorEventArgs e)
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
                 RelayServiceStatus = $"Relay: Error";
                 System.Diagnostics.Debug.WriteLine($"Relay service error: {e.GetException()?.Message}");
@@ -257,7 +257,7 @@ namespace DCSRelay.ViewModels
             if (task.IsCompletedSuccessfully)
             {
                 var ports = task.Result;
-                Application.Current.Dispatcher.Invoke(() =>
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
                     AvailablePorts.Clear();
                     foreach (var port in ports)

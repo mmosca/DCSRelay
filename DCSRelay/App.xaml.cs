@@ -7,7 +7,7 @@ namespace DCSRelay;
 /// <summary>
 /// Interaction logic for App.xaml
 /// </summary>
-public partial class App : Application
+public partial class App : System.Windows.Application
 {
     private IServiceProvider? _serviceProvider;
     private MainWindowViewModel? _mainWindowViewModel;
