@@ -72,7 +72,7 @@ namespace DCSRelay.Services
 
                 // Join the multicast group
                 var multicastAddress = IPAddress.Parse(MulticastAddress);
-                _udpClient.JoinMulticastGroup(multicastAddress);
+                _udpClient.JoinMulticastGroup(multicastAddress, IPAddress.Any);
 
                 _isRunning = true;
                 _listenerTask = ListenForMulticastAsync(_cancellationTokenSource.Token);
@@ -178,12 +178,12 @@ namespace DCSRelay.Services
             try
             {
                 var client = _udpClient;
-                List<Socket> clients = new List<Socket> { client.Client };
 
                 while (!cancellationToken.IsCancellationRequested && _udpClient != null)
                 {
                     try
                     {
+                        List<Socket> clients = new List<Socket> { client.Client };
                         // Receive UDP packet asynchronously
                         Socket.Select(clients, null, clients, 1000000); // 1 second timeout
                         if(clients.Count > 0)
