@@ -117,6 +117,7 @@ namespace DCSRelay.Services
 
             _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = null;
+            _udpClient?.Dispose();
             _udpClient = null;
             _listenerTask = null;
 
@@ -175,30 +176,30 @@ namespace DCSRelay.Services
 
         private async Task ListenForMulticastAsync(CancellationToken cancellationToken)
         {
+            byte[] buffer = new byte[BufferSize];
+            var socket = _udpClient?.Client;
+            if (socket == null)
+            {
+                return;
+            }
+
             try
             {
-                var client = _udpClient;
-
-                while (!cancellationToken.IsCancellationRequested && _udpClient != null)
+                while (!cancellationToken.IsCancellationRequested)
                 {
                     try
                     {
-                        List<Socket> clients = new List<Socket> { client.Client };
-                        // Receive UDP packet asynchronously
-                        Socket.Select(clients, null, clients, 1000000); // 1 second timeout
-                        if(clients.Count > 0)
+                        // Fully asynchronous receive; cancellation aborts the pending operation
+                        var result = await socket.ReceiveAsync(buffer, SocketFlags.None, cancellationToken).ConfigureAwait(false);
+                        if (result > 0)
                         {
-                            if (client.Client.Available > 0)
-                            {
-                                var result = await client.ReceiveAsync(cancellationToken).ConfigureAwait(false);
-                                var data = result.Buffer.AsSpan(0, result.Buffer.Length).ToArray();
+                            var data = buffer.AsSpan(0, result).ToArray();
 
-                                // Relay to all active serial ports
-                                await RelayToSerialPortsAsync(data);
+                            // Relay to all active serial ports
+                            await RelayToSerialPortsAsync(data).ConfigureAwait(false);
 
-                                // Fire event for logging/monitoring
-                                DataRelayed?.Invoke(this, new RelayEventArgs(result.RemoteEndPoint, data.Length));
-                            }
+                            // Fire event for logging/monitoring
+                            DataRelayed?.Invoke(this, new RelayEventArgs(data.Length));
                         }
                     }
                     catch (OperationCanceledException)
@@ -253,13 +254,15 @@ namespace DCSRelay.Services
             {
                 port = new SerialPort(portInfo.PortName)
                 {
-                    BaudRate = 115200,
+                    BaudRate = 250000,
                     Parity = Parity.None,
                     DataBits = 8,
                     StopBits = StopBits.One,
                     Handshake = Handshake.None,
                     ReadTimeout = 1000,
-                    WriteTimeout = 1000
+                    WriteTimeout = 1000,
+                    RtsEnable = true,
+                    DtrEnable = false,
                 };
 
                 if (!port.IsOpen)
@@ -293,12 +296,12 @@ namespace DCSRelay.Services
     /// </summary>
     public class RelayEventArgs : EventArgs
     {
-        public IPEndPoint RemoteEndPoint { get; }
+        //public IPEndPoint RemoteEndPoint { get; }
         public int BytesRelayed { get; }
 
-        public RelayEventArgs(IPEndPoint remoteEndPoint, int bytesRelayed)
+        public RelayEventArgs(int bytesRelayed)
         {
-            RemoteEndPoint = remoteEndPoint;
+            //RemoteEndPoint = remoteEndPoint;
             BytesRelayed = bytesRelayed;
         }
     }
