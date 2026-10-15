@@ -8,12 +8,12 @@
 
   <Identity
     Name="1569f034-a48f-4fac-bef9-295fbec74f33"
-    Publisher="CN=marce"
+    Publisher="CN=mmosca"
     Version="1.0.0.0" />
 
   <Properties>
     <DisplayName>DCSRelay.Package</DisplayName>
-    <PublisherDisplayName>marce</PublisherDisplayName>
+    <PublisherDisplayName>mmosca</PublisherDisplayName>
     <Logo>Images\StoreLogo.png</Logo>
   </Properties>
 
