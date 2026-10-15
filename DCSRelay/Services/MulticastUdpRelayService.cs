@@ -20,6 +20,14 @@ namespace DCSRelay.Services
         private const int MulticastPort = 5010;
         private const int BufferSize = 4096;
 
+        // DCS-BIOS (Skunkworks) receives text commands (e.g. "MASTER_ARM 1\n") over UDP on this port
+        private const int DcsBiosCommandPort = 7778;
+        private const int MaxPendingLineLength = 1024;
+
+        private readonly Dictionary<string, SerialSession> _sessions = new Dictionary<string, SerialSession>(StringComparer.OrdinalIgnoreCase);
+        private UdpClient? _commandClient;
+        private readonly Services.IAppConfigurationService _appConfigService;
+
         private readonly List<HardwareDeviceInfo> _activePorts;
         private readonly object _portsLock = new object();
 
@@ -43,10 +51,32 @@ namespace DCSRelay.Services
         /// </summary>
         public event EventHandler<System.IO.ErrorEventArgs>? ErrorOccurred;
 
-        public MulticastUdpRelayService()
+        public MulticastUdpRelayService(Services.IAppConfigurationService appConfigService)
         {
             _activePorts = new List<HardwareDeviceInfo>();
             _isRunning = false;
+            _appConfigService = appConfigService ?? throw new ArgumentNullException(nameof(appConfigService));
+        }
+
+        private static IPEndPoint ParseCommandEndpoint(string? address)
+        {
+            if (string.IsNullOrWhiteSpace(address))
+            {
+                return new IPEndPoint(IPAddress.Parse("127.0.0.1"), DcsBiosCommandPort);
+            }
+
+            // Support formats like "127.0.0.1:7778" or just "127.0.0.1"
+            var parts = address.Split(':');
+            if (parts.Length == 2 && int.TryParse(parts[1], out var port))
+            {
+                if (IPAddress.TryParse(parts[0], out var ip))
+                {
+                    return new IPEndPoint(ip, port);
+                }
+            }
+
+            // Fallback to localhost with default port
+            return new IPEndPoint(IPAddress.Parse("127.0.0.1"), DcsBiosCommandPort);
         }
 
         /// <summary>
@@ -74,7 +104,13 @@ namespace DCSRelay.Services
                 var multicastAddress = IPAddress.Parse(MulticastAddress);
                 _udpClient.JoinMulticastGroup(multicastAddress, IPAddress.Any);
 
+                _commandClient = new UdpClient();
+
                 _isRunning = true;
+                lock (_portsLock)
+                {
+                    SyncSessions();
+                }
                 _listenerTask = ListenForMulticastAsync(_cancellationTokenSource.Token);
 
                 System.Diagnostics.Debug.WriteLine($"Multicast UDP relay started on {MulticastAddress}:{MulticastPort}");
@@ -121,6 +157,13 @@ namespace DCSRelay.Services
             _udpClient = null;
             _listenerTask = null;
 
+            lock (_portsLock)
+            {
+                SyncSessions();
+            }
+            _commandClient?.Dispose();
+            _commandClient = null;
+
             System.Diagnostics.Debug.WriteLine("Multicast UDP relay stopped.");
         }
 
@@ -133,6 +176,7 @@ namespace DCSRelay.Services
             {
                 _activePorts.Clear();
                 _activePorts.AddRange(ports ?? new List<HardwareDeviceInfo>());
+                SyncSessions();
             }
 
             System.Diagnostics.Debug.WriteLine($"Relay service now targeting {_activePorts.Count} ports.");
@@ -148,6 +192,7 @@ namespace DCSRelay.Services
                 if (!_activePorts.Contains(port))
                 {
                     _activePorts.Add(port);
+                    SyncSessions();
                 }
             }
         }
@@ -160,6 +205,7 @@ namespace DCSRelay.Services
             lock (_portsLock)
             {
                 _activePorts.Remove(port);
+                SyncSessions();
             }
         }
 
@@ -222,18 +268,18 @@ namespace DCSRelay.Services
 
         private async Task RelayToSerialPortsAsync(byte[] data)
         {
-            List<HardwareDeviceInfo> portsCopy;
+            List<SerialSession> sessionsCopy;
 
             lock (_portsLock)
             {
-                portsCopy = new List<HardwareDeviceInfo>(_activePorts);
+                sessionsCopy = new List<SerialSession>(_sessions.Values);
             }
 
             var tasks = new List<Task>();
 
-            foreach (var portInfo in portsCopy)
+            foreach (var session in sessionsCopy)
             {
-                tasks.Add(Task.Run(() => RelayToSerialPort(portInfo, data)));
+                tasks.Add(Task.Run(() => WriteToSession(session, data)));
             }
 
             try
@@ -246,13 +292,122 @@ namespace DCSRelay.Services
             }
         }
 
-        private void RelayToSerialPort(HardwareDeviceInfo portInfo, byte[] data)
+        private static void WriteToSession(SerialSession session, byte[] data)
         {
-            SerialPort? port = null;
+            try
+            {
+                lock (session.WriteLock)
+                {
+                    if (session.Port.IsOpen)
+                    {
+                        session.Port.Write(data, 0, data.Length);
+                    }
+                }
+
+                System.Diagnostics.Debug.WriteLine($"Relayed {data.Length} bytes to {session.Port.PortName}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error writing to {session.Port.PortName}: {ex.Message}");
+            }
+        }
+
+        // Must be called with _portsLock held. Keeps open serial ports in line with the active list.
+        private void SyncSessions()
+        {
+            var wanted = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (_isRunning)
+            {
+                foreach (var info in _activePorts)
+                {
+                    wanted.Add(info.PortName);
+                }
+            }
+
+            foreach (var name in new List<string>(_sessions.Keys))
+            {
+                if (!wanted.Contains(name))
+                {
+                    var session = _sessions[name];
+                    _sessions.Remove(name);
+                    session.Close();
+                }
+            }
+
+            foreach (var name in wanted)
+            {
+                if (_sessions.ContainsKey(name))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    _sessions[name] = new SerialSession(name, OnSerialDataReceived);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error opening {name}: {ex.Message}");
+                    ErrorOccurred?.Invoke(this, new ErrorEventArgs(ex));
+                }
+            }
+        }
+
+        private void OnSerialDataReceived(SerialSession session)
+        {
+            List<string> commands;
+            try
+            {
+                commands = session.ReadCommands(MaxPendingLineLength);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error reading from {session.Port.PortName}: {ex.Message}");
+                return;
+            }
+
+            foreach (var command in commands)
+            {
+                _ = SendToDcsBiosAsync(command);
+            }
+        }
+
+        private async Task SendToDcsBiosAsync(string command)
+        {
+            var client = _commandClient;
+            if (client == null)
+            {
+                return;
+            }
 
             try
             {
-                port = new SerialPort(portInfo.PortName)
+                var bytes = System.Text.Encoding.ASCII.GetBytes(command);
+                var endpoint = ParseCommandEndpoint(_appConfigService.DcsBiosCommandAddress);
+                await client.SendAsync(bytes, bytes.Length, endpoint).ConfigureAwait(false);
+                System.Diagnostics.Debug.WriteLine($"Sent to DCS-BIOS: {command.TrimEnd()} -> {endpoint}");
+            }
+            catch (ObjectDisposedException)
+            {
+                // Service is stopping
+            }
+            catch (Exception ex)
+            {
+                ErrorOccurred?.Invoke(this, new ErrorEventArgs(ex));
+            }
+        }
+
+        private sealed class SerialSession
+        {
+            private readonly System.Text.StringBuilder _pending = new System.Text.StringBuilder();
+            private readonly object _readLock = new object();
+
+            public SerialPort Port { get; }
+            public object WriteLock { get; } = new object();
+
+            public SerialSession(string portName, Action<SerialSession> onData)
+            {
+                Port = new SerialPort(portName)
                 {
                     BaudRate = 250000,
                     Parity = Parity.None,
@@ -263,24 +418,66 @@ namespace DCSRelay.Services
                     WriteTimeout = 1000,
                     RtsEnable = true,
                     DtrEnable = false,
+                    Encoding = System.Text.Encoding.ASCII
                 };
+                Port.DataReceived += (_, _) => onData(this);
+                Port.Open();
+            }
 
-                if (!port.IsOpen)
+            // Returns complete newline-terminated commands; partial lines are buffered.
+            public List<string> ReadCommands(int maxPending)
+            {
+                var result = new List<string>();
+                lock (_readLock)
                 {
-                    port.Open();
+                    if (!Port.IsOpen)
+                    {
+                        return result;
+                    }
+
+                    _pending.Append(Port.ReadExisting());
+
+                    int newline;
+                    while ((newline = IndexOfNewline()) >= 0)
+                    {
+                        var line = _pending.ToString(0, newline).Trim();
+                        _pending.Remove(0, newline + 1);
+                        if (line.Length > 0)
+                        {
+                            result.Add(line + "\n");
+                        }
+                    }
+
+                    if (_pending.Length > maxPending)
+                    {
+                        _pending.Clear();
+                    }
                 }
-
-                port.Write(data, 0, data.Length);
-
-                System.Diagnostics.Debug.WriteLine($"Relayed {data.Length} bytes to {portInfo.PortName}");
+                return result;
             }
-            catch (Exception ex)
+
+            private int IndexOfNewline()
             {
-                System.Diagnostics.Debug.WriteLine($"Error writing to {portInfo.PortName}: {ex.Message}");
+                for (int i = 0; i < _pending.Length; i++)
+                {
+                    if (_pending[i] == '\n')
+                    {
+                        return i;
+                    }
+                }
+                return -1;
             }
-            finally
+
+            public void Close()
             {
-                port?.Dispose();
+                try
+                {
+                    Port.Dispose();
+                }
+                catch (Exception)
+                {
+                    // Port may already be gone (e.g. device unplugged)
+                }
             }
         }
 

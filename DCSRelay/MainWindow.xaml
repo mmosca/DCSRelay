@@ -12,6 +12,17 @@
         Closing="MainWindow_Closing"
         StateChanged="MainWindow_StateChanged">
     <DockPanel LastChildFill="True">
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="File">
+                <MenuItem Header="Exit" Click="OnFileExitClicked" />
+            </MenuItem>
+            <MenuItem Header="Edit">
+                <MenuItem Header="Preferences" Click="OnEditPreferencesClicked" />
+            </MenuItem>
+            <MenuItem Header="Help">
+                <MenuItem Header="About" Click="OnHelpAboutClicked" />
+            </MenuItem>
+        </Menu>
         <!-- Status Bar at the bottom -->
         <StatusBar DockPanel.Dock="Bottom" Height="30" Background="#F0F0F0">
             <StatusBarItem>

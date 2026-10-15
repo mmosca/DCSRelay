@@ -115,4 +115,41 @@ public partial class MainWindow : Window
             }
         }
     }
+
+        private void OnFileExitClicked(object sender, RoutedEventArgs e)
+    {
+        // Prepare for shutdown then request application exit
+        PrepareForApplicationShutdown();
+        System.Windows.Application.Current.Shutdown();
+    }
+
+    private void OnEditPreferencesClicked(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var svc = App.ServiceProvider?.GetService(typeof(Services.IAppConfigurationService)) as Services.IAppConfigurationService;
+            var prefs = new PreferencesWindow(svc);
+            prefs.Owner = this;
+            prefs.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error opening preferences: {ex.Message}");
+        }
+    }
+
+    private void OnHelpAboutClicked(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var asm = System.Reflection.Assembly.GetEntryAssembly() ?? System.Reflection.Assembly.GetExecutingAssembly();
+            var version = asm.GetName().Version?.ToString() ?? "?";
+            var fileVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(asm.Location).FileVersion ?? "?";
+            System.Windows.MessageBox.Show(this, $"DCS Relay\nVersion: {version}\nFile Version: {fileVersion}", "About DCS Relay", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error showing About dialog: {ex.Message}");
+        }
+    }
 }
