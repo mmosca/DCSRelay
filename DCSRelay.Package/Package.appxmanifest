@@ -8,7 +8,7 @@
 
   <Identity
     Name="mmosca.DCSRelay"
-    Publisher="CN=mmosca"
+    Publisher="CN=55B7D9B7-7DB0-4859-9694-4385628639CA"
     Version="1.0.0.0" />
 
   <Properties>
