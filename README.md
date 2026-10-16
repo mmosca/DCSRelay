@@ -4,6 +4,8 @@ A desktop application for relaying Multicast UDP traffic to local Serial Ports.
 
 DCSRelay monitors a specific multicast address and relays the received data stream to one or more selected serial ports on the host computer. This enables interfacing network-based DCS data with physical serial hardware.
 
+[![Discord](https://img.shields.io/badge/Discord-Join%20our%20server-5865F2?logo=discord&logoColor=white)](https://discord.gg/fA3BHU8kcH)
+
 ## 🚀 Features
 
 - **Multicast Listener:** Continuously monitors network traffic at `239.255.50.10:5010`.
