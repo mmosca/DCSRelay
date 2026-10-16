@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
-  <g stroke="#58FFA0" stroke-width="32" stroke-linecap="butt" fill="none">
+  <g stroke="lawngreen" stroke-width="32" stroke-linecap="butt" fill="none">
 	<path d="M45.26 58.58 A108 108 0 0 1 210.74 58.58"/>
 	<path d="M210.74 197.42 A108 108 0 0 1 45.26 197.42"/>
   </g>
-  <g stroke="#8BFFC0" stroke-width="32" stroke-linecap="butt">
+  <g stroke="lawngreen" stroke-width="32" stroke-linecap="butt">
 	<line x1="80" y1="128" x2="176" y2="128"/>
 	<line x1="128" y1="80" x2="128" y2="176"/>
   </g>

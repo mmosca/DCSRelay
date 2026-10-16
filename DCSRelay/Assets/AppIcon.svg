@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
-  <circle cx="128" cy="128" r="112" stroke="#4AFF88" stroke-width="16"/>
+  <circle cx="128" cy="128" r="112" stroke="green" stroke-width="16"/>
 
-  <g stroke="#37DC78" stroke-width="16" stroke-linecap="butt">
+  <g stroke="green" stroke-width="16" stroke-linecap="butt">
 	<line x1="96" y1="64" x2="96" y2="192"/>
 	<line x1="128" y1="64" x2="128" y2="192"/>
 	<line x1="160" y1="64" x2="160" y2="192"/>
@@ -11,7 +11,7 @@
 	<line x1="64" y1="160" x2="192" y2="160"/>
   </g>
 
-  <g stroke="#69FFA5" stroke-linecap="butt" stroke-linejoin="round" fill="none">
+  <g stroke="lawngreen" stroke-linecap="butt" stroke-linejoin="round" fill="none">
 	<path d="M91.23 97.15 A48 48 0 0 1 164.77 97.15" stroke-width="16"/>
 	<path d="M164.77 158.85 A48 48 0 0 1 91.23 158.85" stroke-width="16"/>
 	<line x1="96" y1="128" x2="160" y2="128" stroke-width="16"/>
