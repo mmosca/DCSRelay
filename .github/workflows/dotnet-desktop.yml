@@ -122,12 +122,10 @@ jobs:
         Configuration: ${{ matrix.configuration }}
       run: |
         dotnet publish DCSRelay --configuration $env:Configuration --output DCSRelay\bin\Release\net10.0-windows --self-contained true /p:PublishSingleFile=true /p:PublishTrimmed=false /p:PublishReadyToRun=true
-        cd DCSRelay\bin\$env:Configuration\net10.0-windows
-        Compress-Archive -Path .\* -DestinationPath ..\..\..\..\DCSRelay-${env:Configuration}.zip
 
     # Publish zip file
     - name: Upload ${{ matrix.configuration }} Zip file
       uses: actions/upload-artifact@v4
       with:
-        name: DCSRelay-${{matrix.configuration}}.zip
-        path: DCSRelay-${{matrix.configuration}}.zip
+        name: DCSRelay-${{matrix.configuration}}
+        path: DCSRelay\bin\${{matrix.configuration}}\net10.0-windows
