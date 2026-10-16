@@ -117,15 +117,23 @@ jobs:
         path: ${{ env.Wap_Project_Directory }}\AppPackages
 
     # Build normal zip file
-    - name: Build Zip file
+    - name: Build Zip file ${{ matrix.configuration }}}}
+      env:
+        Configuration: ${{ matrix.configuration }}
       run: |
-        dotnet publish DCSRelay
-        cd DCSRelay\bin\Release\net10.0-windows
-        Compress-Archive -Path .\* -DestinationPath ..\..\..\..\DCSRelay-${{ matrix.configuration }}.zip
+        dotnet publish DCSRelay 
+            --configuration $env:Configuration 
+            --output DCSRelay\bin\Release\net10.0-windows 
+            --self-contained true
+            /p:PublishSingleFile=true 
+            /p:PublishTrimmed=true 
+            /p:PublishReadyToRun=true
+        cd DCSRelay\bin\$env:Configuration\net10.0-windows
+        Compress-Archive -Path .\* -DestinationPath ..\..\..\..\DCSRelay-${env:Configuration}.zip
 
     # Publish zip file
-    - name: Upload Zip file
+    - name: Upload ${{ matrix.configuration }} Zip file
       uses: actions/upload-artifact@v4
       with:
-        name: DCSRelay-${{matrix.configuratoin}}.zip
-        path: DCSRelay-${{matrix.configuratoin}}.zip
+        name: DCSRelay-${{matrix.configuration}}.zip
+        path: DCSRelay-${{matrix.configuration}}.zip
