@@ -1,10 +1,15 @@
 # DCSRelay
 
-A desktop application for relaying Multicast UDP traffic to local Serial Ports.
+An Open Source desktop application for relaying Multicast UDP traffic to local Serial Ports.
 
-DCSRelay monitors a specific multicast address and relays the received data stream to one or more selected serial ports on the host computer. This enables interfacing network-based DCS data with physical serial hardware.
+DCSRelay listens for DCS-BIOS multicast messages and relays the received data stream to one or more selected serial ports on the host computer so all your shiny custom DCS panels can work with the minimal ammount of effort.
 
 [![Discord](https://img.shields.io/badge/Discord-Join%20our%20server-5865F2?logo=discord&logoColor=white)](https://discord.gg/fA3BHU8kcH)
+
+Other similar applications:
+
+[TekConnect](https://github.com/tekcreations/TekConnect) by TekCreations (closed source).
+[DCSBios Bridge](https://github.com/DCS-Skunkworks/DCSBIOSBridge) by the guys at DCS-Skunworks (not mantained)
 
 ## 🚀 Features
 
