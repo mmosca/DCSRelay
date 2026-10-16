@@ -85,7 +85,7 @@ jobs:
 
     # Restore the application to populate the obj folder with RuntimeIdentifiers
     - name: Restore the application
-      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration /p:Version=$env:Version
+      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration /p:Version=$env:Version /p:VersionPrefix=$env:Version /p:AppxPackageVersion=$env:AppxVersion
       env:
         Configuration: ${{ matrix.configuration }}
 
@@ -123,7 +123,7 @@ jobs:
       env:
         Configuration: ${{ matrix.configuration }}
       run: |
-        dotnet publish DCSRelay --configuration $env:Configuration --output DCSRelay\bin\Release\net10.0-windows --self-contained true /p:PublishSingleFile=true /p:PublishTrimmed=false /p:PublishReadyToRun=true /p:Version=$env:Version
+        dotnet publish DCSRelay --configuration $env:Configuration --output DCSRelay\bin\Release\net10.0-windows --self-contained true /p:PublishSingleFile=true /p:PublishTrimmed=false /p:PublishReadyToRun=true /p:Version=$env:Version /p:VersionPrefix=$env:Version
 
     # Publish zip file
     - name: Upload ${{ matrix.configuration }} Zip file
