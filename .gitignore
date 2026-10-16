@@ -6,5 +6,7 @@ obj/
 *.bak
 .vs
 *~
+*.pfx
 *.cache
+SigningCertificate_Encoded.txt
 
