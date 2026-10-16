@@ -9,4 +9,4 @@ obj/
 *.pfx
 *.cache
 SigningCertificate_Encoded.txt
-
+*.wapproj.user
