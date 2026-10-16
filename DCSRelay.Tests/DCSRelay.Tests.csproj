@@ -23,4 +23,8 @@
     <ProjectReference Include="..\DCSRelay\DCSRelay.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Services\" />
+  </ItemGroup>
+
 </Project>
