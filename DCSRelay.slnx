@@ -6,6 +6,11 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
+  <Folder Name="/Solution Items/">
+    <File Path=".github/workflows/dotnet-desktop.yml" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+  </Folder>
   <Project Path="DCSRelay.Package/DCSRelay.Package.wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5" Id="eba8d095-29eb-4ca0-8b61-d80619ec17a7">
     <Deploy />
   </Project>
