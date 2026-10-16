@@ -117,7 +117,7 @@ jobs:
         path: ${{ env.Wap_Project_Directory }}\AppPackages
 
     # Build normal zip file
-    - name: Build Zip file ${{ matrix.configuration }}}}
+    - name: Build Zip file ${{ matrix.configuration }}
       env:
         Configuration: ${{ matrix.configuration }}
       run: |
