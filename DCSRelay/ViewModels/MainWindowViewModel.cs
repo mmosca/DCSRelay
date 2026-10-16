@@ -95,12 +95,12 @@ namespace DCSRelay.ViewModels
         {
             try
             {
-                var savedPortNames = await _portConfigurationService.LoadActivePortsAsync();
-                if (savedPortNames.Count > 0)
+                var savedDeviceIds = await _portConfigurationService.LoadActivePortsAsync();
+                if (savedDeviceIds.Count > 0)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Loaded {savedPortNames.Count} saved ports from configuration.");
+                    System.Diagnostics.Debug.WriteLine($"Loaded {savedDeviceIds.Count} saved ports from configuration.");
                     // Store for later matching after ports are discovered
-                    _savedPortNames = new List<string>(savedPortNames);
+                    _savedDeviceIds = new List<string>(savedDeviceIds);
                 }
             }
             catch (Exception ex)
@@ -109,7 +109,7 @@ namespace DCSRelay.ViewModels
             }
         }
 
-        private List<string>? _savedPortNames;
+        private List<string>? _savedDeviceIds;
 
         private async Task InitializeRelayServiceAsync()
         {
@@ -266,12 +266,12 @@ namespace DCSRelay.ViewModels
                     }
 
                     // Restore previously saved active ports if available
-                    if (_savedPortNames != null && _savedPortNames.Count > 0)
+                    if (_savedDeviceIds != null && _savedDeviceIds.Count > 0)
                     {
                         var savedPorts = new List<HardwareDeviceInfo>();
-                        foreach (var savedPortName in _savedPortNames)
+                        foreach (var savedDeviceId in _savedDeviceIds)
                         {
-                            var matchingPort = AvailablePorts.FirstOrDefault(p => p.PortName == savedPortName);
+                            var matchingPort = AvailablePorts.FirstOrDefault(p => p.DeviceID == savedDeviceId);
                             if (matchingPort != null)
                             {
                                 savedPorts.Add(matchingPort);
@@ -288,8 +288,8 @@ namespace DCSRelay.ViewModels
                         System.Diagnostics.Debug.WriteLine($"Restored {savedPorts.Count} previously active ports.");
                         UpdateRelayService();
 
-                        // Clear the saved port names after restoration
-                        _savedPortNames = null;
+                        // Clear the saved device ids after restoration
+                        _savedDeviceIds = null;
                     }
 
                     SortPortLists();

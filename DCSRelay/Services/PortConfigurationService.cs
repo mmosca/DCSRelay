@@ -66,7 +66,10 @@ namespace DCSRelay.Services
 
                 var config = new PortConfiguration
                 {
-                    ActivePorts = activePorts.Select(p => p.PortName).ToList(),
+                    ActivePorts = activePorts
+                        .Select(p => p.DeviceID)
+                        .Where(deviceId => !string.IsNullOrWhiteSpace(deviceId))
+                        .ToList(),
                     LastSaved = DateTime.Now
                 };
 

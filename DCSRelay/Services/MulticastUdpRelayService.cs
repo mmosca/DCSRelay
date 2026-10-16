@@ -407,9 +407,38 @@ namespace DCSRelay.Services
 
             public SerialSession(string portName, Action<SerialSession> onData)
             {
-                Port = new SerialPort(portName)
+                var port = CreatePort(portName, 250000);
+                port.DataReceived += (_, _) => onData(this);
+
+                try
                 {
-                    BaudRate = 250000,
+                    port.Open();
+                }
+                catch (Exception firstOpenException)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Opening {portName} at 250000 failed ({firstOpenException.Message}), retrying at 115200.");
+
+                    try
+                    {
+                        port.Dispose();
+                    }
+                    catch
+                    {
+                    }
+
+                    port = CreatePort(portName, 115200);
+                    port.DataReceived += (_, _) => onData(this);
+                    port.Open();
+                }
+
+                Port = port;
+            }
+
+            private static SerialPort CreatePort(string portName, int baudRate)
+            {
+                return new SerialPort(portName)
+                {
+                    BaudRate = baudRate,
                     Parity = Parity.None,
                     DataBits = 8,
                     StopBits = StopBits.One,
@@ -420,8 +449,6 @@ namespace DCSRelay.Services
                     DtrEnable = false,
                     Encoding = System.Text.Encoding.ASCII
                 };
-                Port.DataReceived += (_, _) => onData(this);
-                Port.Open();
             }
 
             // Returns complete newline-terminated commands; partial lines are buffered.

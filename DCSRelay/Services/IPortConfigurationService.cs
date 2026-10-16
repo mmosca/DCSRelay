@@ -12,7 +12,7 @@ namespace DCSRelay.Services
         /// <summary>
         /// Loads the previously saved active ports from the configuration file.
         /// </summary>
-        /// <returns>A list of port names that were previously active, or an empty list if no configuration exists.</returns>
+        /// <returns>A list of previously active device identifiers, or an empty list if no configuration exists.</returns>
         Task<List<string>> LoadActivePortsAsync();
 
         /// <summary>
