@@ -60,7 +60,8 @@ jobs:
       Test_Project_Path: DCSRelay.Tests                           # Replace with the path to your test project, i.e. MyWpfApp.Tests\MyWpfApp.Tests.csproj.
       Wap_Project_Directory: DCSRelay.Package                     # Replace with the Wap project directory relative to the solution, i.e. MyWpfApp.Package.
       Wap_Project_Path: DCSRelay.Package\DCSRelay.Package.wapproj # Replace with the path to your Wap project, i.e. MyWpf.App.Package\MyWpfApp.Package.wapproj.
-      Version: 1.0.${{ github.run_number }}                                 # Replace with your application version, i.e. 1.0.${{ github.run_number }}.
+      Version: 1.0.${{ github.run_number }}                       # Replace with your application version, i.e. 1.0.${{ github.run_number }}.
+      AppxVersion: 1.0.${{ github.run_number }}.0                 # Replace with your application version, i.e. 1.0.${{ github.run_number }}.0.
 
     steps:
     - name: Checkout
@@ -97,7 +98,7 @@ jobs:
 
     # Create the app package by building and packaging the Windows Application Packaging project
     - name: Create the app package
-      run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile=GitHubActionsWorkflow.pfx /p:Version=$env:Version /p:ApplicationVersion=$env:Version /p:AppxPackageVersion=$env:Version
+      run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile=GitHubActionsWorkflow.pfx /p:Version=$env:Version /p:ApplicationVersion=$env:Version /p:AppxPackageVersion=$env:AppxVersion
       env:
         Appx_Bundle: Always
         Appx_Bundle_Platforms: x86|x64
