@@ -96,6 +96,17 @@ jobs:
         $certificatePath = Join-Path -Path $env:Wap_Project_Directory -ChildPath GitHubActionsWorkflow.pfx
         [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
 
+    # Update appxmanifest Identity version to match Version env variable
+    - name: Update appxmanifest version
+      run: |
+        $manifestPath = Join-Path -Path $env:Wap_Project_Directory -ChildPath Package.appxmanifest
+        [xml]$manifest = Get-Content $manifestPath
+        $ns = New-Object System.Xml.XmlNamespaceManager($manifest.NameTable)
+        $ns.AddNamespace("appx", "http://schemas.microsoft.com/appx/manifest/foundation/windows10")
+        $identity = $manifest.SelectSingleNode("/appx:Package/appx:Identity", $ns)
+        $identity.Version = $env:Version
+        $manifest.Save($manifestPath)
+
     # Create the app package by building and packaging the Windows Application Packaging project
     - name: Create the app package
       run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile=GitHubActionsWorkflow.pfx /p:Version=$env:Version /p:ApplicationVersion=$env:Version /p:AppxPackageVersion=$env:AppxVersion
