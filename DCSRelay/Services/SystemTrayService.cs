@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 using System.Windows;
 
@@ -30,9 +31,14 @@ namespace DCSRelay.Services
             _contextMenu.Items.Add(exitMenuItem);
 
             // Create the notify icon
+            var trayIconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico");
+            var trayIcon = File.Exists(trayIconPath)
+                ? new Icon(trayIconPath)
+                : new Icon(SystemIcons.Application, 40, 40);
+
             _notifyIcon = new NotifyIcon
             {
-                Icon = new Icon(SystemIcons.Application, 40, 40),
+                Icon = trayIcon,
                 Visible = false,
                 Text = "DCSRelay",
                 ContextMenuStrip = _contextMenu

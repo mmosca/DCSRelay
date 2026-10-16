@@ -26,6 +26,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
+        Icon = SvgIconLoader.LoadFromAssets("AppIcon.svg") ?? Icon;
+
         // Set the ViewModel as the DataContext for data binding
         DataContext = viewModel;
         _viewModel = viewModel;

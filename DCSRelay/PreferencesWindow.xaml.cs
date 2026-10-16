@@ -12,6 +12,7 @@ namespace DCSRelay
         public PreferencesWindow(IAppConfigurationService? configService)
         {
             InitializeComponent();
+            Icon = SvgIconLoader.LoadFromAssets("AppIcon.Simplified.svg") ?? Icon;
             _configService = configService;
 
             // Load values from config service (if available)
