@@ -114,7 +114,7 @@ jobs:
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: MSIX Package ${{ matrix.configuration }}
+        name: DCSRelay-${{env.Version}}-msix-${{matrix.configuration}}
         path: ${{ env.Wap_Project_Directory }}\AppPackages
 
     # Build normal zip file

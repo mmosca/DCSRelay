@@ -7,12 +7,12 @@
   IgnorableNamespaces="uap rescap">
 
   <Identity
-    Name="1569f034-a48f-4fac-bef9-295fbec74f33"
+    Name="mmosca.DCSRelay"
     Publisher="CN=mmosca"
     Version="1.0.0.0" />
 
   <Properties>
-    <DisplayName>DCSRelay.Package</DisplayName>
+    <DisplayName>DCSRelay</DisplayName>
     <PublisherDisplayName>mmosca</PublisherDisplayName>
     <Logo>Images\StoreLogo.png</Logo>
   </Properties>
@@ -45,5 +45,6 @@
   <Capabilities>
     <Capability Name="internetClient" />
     <rescap:Capability Name="runFullTrust" />
+    <Capability Name="privateNetworkClientServer"/>
   </Capabilities>
 </Package>
