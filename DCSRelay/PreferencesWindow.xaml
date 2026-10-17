@@ -22,9 +22,26 @@
                      Text="{Binding DcsBiosCommandAddress, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </StackPanel>
 
-        <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Right">
-            <Button Content="Save" Width="80" Margin="0,0,8,0" Command="{Binding SaveCommand}" />
-            <Button Content="Cancel" Width="80" Command="{Binding CancelCommand}" />
+        <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+            <Button Width="96"
+                    Margin="0,0,8,0"
+                    Height="32"
+                    Command="{Binding SaveCommand}"
+                    IsDefault="True">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets" Margin="0,0,6,0" VerticalAlignment="Center" />
+                    <TextBlock Text="Save" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Width="96"
+                    Height="32"
+                    Command="{Binding CancelCommand}"
+                    IsCancel="True">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" Margin="0,0,6,0" VerticalAlignment="Center" />
+                    <TextBlock Text="Cancel" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
         </StackPanel>
     </Grid>
 </Window>
