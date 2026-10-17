@@ -25,7 +25,7 @@ jobs:
     - name: Checkout source
       uses: actions/checkout@v4
       with:
-        ref: ${{ github.event.workflow_run.head_sha }}
+        ref: main
 
     - name: Resolve release artifact metadata
       id: artifact_meta
