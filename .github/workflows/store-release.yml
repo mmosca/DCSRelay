@@ -62,15 +62,15 @@ jobs:
     - name: Locate package file
       shell: pwsh
       run: |
-        $preferred = Get-ChildItem -Path artifacts -Recurse -File -Filter *.msixupload | Select-Object -First 1
+        $preferred = Get-ChildItem -Path artifacts -Recurse -File -Include *.appxupload,*.msixupload | Select-Object -First 1
         if ($null -ne $preferred) {
           $package = $preferred
         } else {
-          $package = Get-ChildItem -Path artifacts -Recurse -File -Include *.msixbundle,*.msix | Select-Object -First 1
+          $package = Get-ChildItem -Path artifacts -Recurse -File -Include *.appxbundle,*.msixbundle,*.appx,*.msix | Select-Object -First 1
         }
 
         if ($null -eq $package) {
-          throw 'No .msixupload, .msixbundle, or .msix package found in downloaded artifacts.'
+          throw 'No .appxupload, .msixupload, .appxbundle, .msixbundle, .appx, or .msix package found in downloaded artifacts.'
         }
 
         "PACKAGE_PATH=$($package.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
