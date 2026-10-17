@@ -22,6 +22,10 @@ jobs:
     runs-on: windows-latest
 
     steps: 
+    - name: Checkout source
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.workflow_run.head_sha }}
 
     - name: Resolve release artifact metadata
       id: artifact_meta
@@ -74,6 +78,7 @@ jobs:
         }
 
         "PACKAGE_PATH=$($package.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        "PACKAGE_DIRECTORY=$($package.DirectoryName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
     - name: Create GitHub release
       uses: softprops/action-gh-release@v2
@@ -94,5 +99,4 @@ jobs:
               --clientSecret ${{ secrets.AZURE_AD_APPLICATION_SECRET }} 
  
     - name: Publish App package 
-      run: msstore publish '${{ env.PACKAGE_PATH }}' -id 9PH7HVJPN8B1
-
+      run: msstore publish DCSRelay.Package --inputDirectory "$env:PACKAGE_DIRECTORY" -id 9PH7HVJPN8B1
