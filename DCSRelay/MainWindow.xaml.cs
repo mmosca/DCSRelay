@@ -27,10 +27,36 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         Icon = SvgIconLoader.LoadFromAssets("AppIcon.svg") ?? Icon;
+        ApplyMoveButtonIcons();
 
         // Set the ViewModel as the DataContext for data binding
         DataContext = viewModel;
         _viewModel = viewModel;
+    }
+
+    private void ApplyMoveButtonIcons()
+    {
+        var rightArrow = SvgIconLoader.LoadFromAssets("ArrowRight.svg");
+        if (rightArrow != null)
+        {
+            moveRightButton.Content = new System.Windows.Controls.Image
+            {
+                Source = rightArrow,
+                Width = 14,
+                Height = 14
+            };
+        }
+
+        var leftArrow = SvgIconLoader.LoadFromAssets("ArrowLeft.svg");
+        if (leftArrow != null)
+        {
+            moveLeftButton.Content = new System.Windows.Controls.Image
+            {
+                Source = leftArrow,
+                Width = 14,
+                Height = 14
+            };
+        }
     }
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -130,7 +156,13 @@ public partial class MainWindow : Window
         try
         {
             var svc = App.ServiceProvider?.GetService(typeof(Services.IAppConfigurationService)) as Services.IAppConfigurationService;
-            var prefs = new PreferencesWindow(svc);
+            if (svc == null)
+            {
+                return;
+            }
+
+            var viewModel = new PreferencesViewModel(svc);
+            var prefs = new PreferencesWindow(viewModel);
             prefs.Owner = this;
             prefs.ShowDialog();
         }

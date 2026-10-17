@@ -9,8 +9,9 @@ public static class SvgIconLoader
 {
     public static ImageSource? LoadFromAssets(string fileName)
     {
-        var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", fileName);
-        if (!File.Exists(iconPath))
+        var resourceInfo = System.Windows.Application.GetResourceStream(new Uri($"Assets/{fileName}", UriKind.Relative));
+        var resourceStream = resourceInfo?.Stream;
+        if (resourceStream == null)
         {
             return null;
         }
@@ -21,16 +22,34 @@ public static class SvgIconLoader
             TextAsGeometry = true
         };
 
-        var reader = new FileSvgReader(settings);
-        var drawing = reader.Read(iconPath);
-        if (drawing == null)
-        {
-            return null;
-        }
+        var tempPath = Path.Combine(Path.GetTempPath(), $"dcsrelay-{Guid.NewGuid():N}.svg");
 
-        drawing.Freeze();
-        var image = new DrawingImage(drawing);
-        image.Freeze();
-        return image;
+        try
+        {
+            using (resourceStream)
+            using (var output = File.Create(tempPath))
+            {
+                resourceStream.CopyTo(output);
+            }
+
+            var reader = new FileSvgReader(settings);
+            var drawing = reader.Read(tempPath);
+            if (drawing == null)
+            {
+                return null;
+            }
+
+            drawing.Freeze();
+            var image = new DrawingImage(drawing);
+            image.Freeze();
+            return image;
+        }
+        finally
+        {
+            if (File.Exists(tempPath))
+            {
+                File.Delete(tempPath);
+            }
+        }
     }
 }
