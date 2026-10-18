@@ -10,3 +10,4 @@ obj/
 *.cache
 SigningCertificate_Encoded.txt
 *.wapproj.user
+TestResults/
