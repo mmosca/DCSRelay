@@ -11,6 +11,12 @@
         Title="DCS Relay" Height="450" Width="800"
         Closing="MainWindow_Closing"
         StateChanged="MainWindow_StateChanged">
+    <Window.Resources>
+        <Style TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="4,1" />
+            <Setter Property="MinHeight" Value="20" />
+        </Style>
+    </Window.Resources>
     <DockPanel LastChildFill="True">
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="File">
@@ -36,11 +42,22 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
-            <StackPanel Height="30" Orientation="Horizontal">
-                    <Label Content="Multicast Bytes Received:" FontWeight="Bold" Margin="5,0,10,0"/>
-                    <Label Content="{Binding BytesReceivedOnMulticast, StringFormat='0,0'}" Foreground="Blue" FontWeight="Bold" Margin="0,0,20,0"/>
+            <StackPanel Height="30" Orientation="Horizontal" HorizontalAlignment="Right" Margin="10,0,10,0"  >
+                    <Label Content="Multicast Bytes Received:" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <Label Content="{Binding BytesReceivedOnMulticast, StringFormat='0,0'}" Foreground="Blue" FontWeight="Bold" VerticalAlignment="Center"  Margin="10,0,10,0"/>
                 <Separator />
-                    <Label Content="{Binding RelayServiceStatus}" Margin="5,0,5,0" Foreground="Green"/>
+                <Ellipse Width="12" Height="12" VerticalAlignment="Center" HorizontalAlignment="Right"  ToolTip="{Binding RelayServiceStatus}">
+                    <Ellipse.Style>
+                        <Style TargetType="Ellipse">
+                            <Setter Property="Fill" Value="Red" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding RelayServiceStatus}" Value="Relay: Running">
+                                    <Setter Property="Fill" Value="LimeGreen" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Ellipse.Style>
+                </Ellipse>
             </StackPanel>
         </Grid>
 
