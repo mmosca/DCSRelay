@@ -162,7 +162,13 @@ public partial class MainWindow : Window
                 return;
             }
 
-            var viewModel = new PreferencesViewModel(svc);
+            var startupSvc = App.ServiceProvider?.GetService(typeof(Services.IWindowsStartupRegistrationService)) as Services.IWindowsStartupRegistrationService;
+            if (startupSvc == null)
+            {
+                return;
+            }
+
+            var viewModel = new PreferencesViewModel(svc, startupSvc);
             var prefs = new PreferencesWindow(viewModel);
             prefs.Owner = this;
             prefs.ShowDialog();

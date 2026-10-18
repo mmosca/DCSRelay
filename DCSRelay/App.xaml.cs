@@ -23,25 +23,30 @@ public partial class App : System.Windows.Application
         _serviceProvider = serviceCollection.BuildServiceProvider();
         ServiceProvider = _serviceProvider;
 
+        // Load app configuration before creating the window so startup preferences are applied reliably.
+        var startMinimized = false;
+        try
+        {
+            var appConfig = _serviceProvider.GetService<Services.IAppConfigurationService>();
+            if (appConfig != null)
+            {
+                appConfig.LoadAsync().GetAwaiter().GetResult();
+                startMinimized = appConfig.StartMinimized;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading app configuration at startup: {ex.Message}");
+        }
+
         // Resolve MainWindow from DI container - this will recursively resolve all dependencies
         var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
         _mainWindowViewModel = mainWindow.DataContext as MainWindowViewModel;
         mainWindow.Show();
 
-        // Apply start minimized preference if present
-        try
+        if (startMinimized)
         {
-            var appConfig = _serviceProvider.GetService<Services.IAppConfigurationService>();
-            if (appConfig != null && appConfig.StartMinimized)
-            {
-                mainWindow.WindowState = WindowState.Minimized;
-                mainWindow.Hide();
-                mainWindow.ShowInTaskbar = false;
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Error applying start-minimized preference: {ex.Message}");
+            mainWindow.WindowState = WindowState.Minimized;
         }
     }
 
@@ -148,6 +153,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<Services.IMulticastUdpRelayService, Services.MulticastUdpRelayService>();
         // App configuration service for storing user preferences
         services.AddSingleton<Services.IAppConfigurationService, Services.AppConfigurationService>();
+        services.AddSingleton<Services.IWindowsStartupRegistrationService, Services.WindowsStartupRegistrationService>();
         services.AddSingleton<Services.IPortConfigurationService, Services.PortConfigurationService>();
         services.AddSingleton<Services.DeviceChangeMonitorService>();
 

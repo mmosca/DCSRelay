@@ -8,6 +8,7 @@ namespace DCSRelay.Services
     public interface IAppConfigurationService
     {
         bool StartMinimized { get; set; }
+        bool StartWithWindows { get; set; }
         string DcsBiosCommandAddress { get; set; }
         Task LoadAsync();
         Task SaveAsync();
@@ -22,6 +23,7 @@ namespace DCSRelay.Services
         private readonly string _configFilePath;
 
         public bool StartMinimized { get; set; } = false;
+        public bool StartWithWindows { get; set; } = false;
         public string DcsBiosCommandAddress { get; set; } = "127.0.0.1:7778";
 
         public AppConfigurationService()
@@ -55,6 +57,7 @@ namespace DCSRelay.Services
                 if (cfg != null)
                 {
                     StartMinimized = cfg.StartMinimized;
+                    StartWithWindows = cfg.StartWithWindows;
                     if (!string.IsNullOrWhiteSpace(cfg.DcsBiosCommandAddress))
                     {
                         DcsBiosCommandAddress = cfg.DcsBiosCommandAddress;
@@ -79,6 +82,7 @@ namespace DCSRelay.Services
                 var cfg = new ConfigModel
                 {
                     StartMinimized = StartMinimized,
+                    StartWithWindows = StartWithWindows,
                     DcsBiosCommandAddress = DcsBiosCommandAddress
                 };
 
@@ -95,6 +99,7 @@ namespace DCSRelay.Services
         private class ConfigModel
         {
             public bool StartMinimized { get; set; }
+            public bool StartWithWindows { get; set; }
             public string? DcsBiosCommandAddress { get; set; }
         }
     }

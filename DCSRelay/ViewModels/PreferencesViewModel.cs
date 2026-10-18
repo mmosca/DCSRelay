@@ -12,21 +12,27 @@ namespace DCSRelay.ViewModels
         private const string DefaultAddress = "127.0.0.1:7778";
 
         private readonly IAppConfigurationService _configService;
+        private readonly IWindowsStartupRegistrationService _startupRegistrationService;
 
         private bool _startMinimized;
+        private bool _startWithWindows;
         private string _dcsBiosCommandAddress = string.Empty;
         private bool _isSaving;
 
         private bool _originalStartMinimized;
+        private bool _originalStartWithWindows;
         private string _originalDcsBiosCommandAddress = string.Empty;
 
-        public PreferencesViewModel(IAppConfigurationService configService)
+        public PreferencesViewModel(IAppConfigurationService configService, IWindowsStartupRegistrationService startupRegistrationService)
         {
             _configService = configService;
+            _startupRegistrationService = startupRegistrationService;
             _startMinimized = _configService.StartMinimized;
+            _startWithWindows = _configService.StartWithWindows;
             _dcsBiosCommandAddress = _configService.DcsBiosCommandAddress ?? string.Empty;
 
             _originalStartMinimized = _startMinimized;
+            _originalStartWithWindows = _startWithWindows;
             _originalDcsBiosCommandAddress = _dcsBiosCommandAddress;
 
             SaveCommand = new RelayCommand(async _ => await ExecuteSaveCommandAsync(), _ => !IsSaving);
@@ -45,6 +51,20 @@ namespace DCSRelay.ViewModels
                 if (_startMinimized != value)
                 {
                     _startMinimized = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(IsDirty));
+                }
+            }
+        }
+
+        public bool StartWithWindows
+        {
+            get => _startWithWindows;
+            set
+            {
+                if (_startWithWindows != value)
+                {
+                    _startWithWindows = value;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(IsDirty));
                 }
@@ -78,7 +98,10 @@ namespace DCSRelay.ViewModels
             }
         }
 
-        public bool IsDirty => _startMinimized != _originalStartMinimized || _dcsBiosCommandAddress != _originalDcsBiosCommandAddress;
+        public bool IsDirty =>
+            _startMinimized != _originalStartMinimized ||
+            _startWithWindows != _originalStartWithWindows ||
+            _dcsBiosCommandAddress != _originalDcsBiosCommandAddress;
 
         public event Action<bool>? CloseRequested;
 
@@ -89,13 +112,16 @@ namespace DCSRelay.ViewModels
             var value = NormalizeAddress(_dcsBiosCommandAddress);
 
             _configService.StartMinimized = _startMinimized;
+            _configService.StartWithWindows = _startWithWindows;
             _configService.DcsBiosCommandAddress = value;
             await _configService.SaveAsync();
+            _startupRegistrationService.SetEnabled(_startWithWindows);
 
             _dcsBiosCommandAddress = value;
             OnPropertyChanged(nameof(DcsBiosCommandAddress));
 
             _originalStartMinimized = _startMinimized;
+            _originalStartWithWindows = _startWithWindows;
             _originalDcsBiosCommandAddress = _dcsBiosCommandAddress;
             OnPropertyChanged(nameof(IsDirty));
         }
@@ -103,6 +129,7 @@ namespace DCSRelay.ViewModels
         public void Cancel()
         {
             StartMinimized = _originalStartMinimized;
+            StartWithWindows = _originalStartWithWindows;
             DcsBiosCommandAddress = _originalDcsBiosCommandAddress;
         }
 
