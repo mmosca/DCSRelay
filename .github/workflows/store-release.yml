@@ -80,13 +80,25 @@ jobs:
         "PACKAGE_PATH=$($package.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
         "PACKAGE_DIRECTORY=$($package.DirectoryName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
+    - name: Locate release file
+      shell: pwsh
+      run: |
+        $package = Get-ChildItem -Path artifacts -Recurse -File -Include *.appxbundle,*.msixbundle,*.appx,*.msix | Select-Object -First 1
+
+        if ($null -eq $package) {
+          throw 'No .appxupload, .msixupload, .appxbundle, .msixbundle, .appx, or .msix package found in downloaded artifacts.'
+        }
+
+        "RELEASE_PATH=$($package.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        "RELEASE_DIRECTORY=$($package.DirectoryName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
     - name: Create GitHub release
       uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ steps.artifact_meta.outputs.version }}
         name: DCSRelay v${{ steps.artifact_meta.outputs.version }}
         generate_release_notes: true
-        files: ${{ env.PACKAGE_PATH }}
+        files: ${{ env.RELEASE_PATH }}
  
     - name: Configure Microsoft Store CLI 
       uses: microsoft/microsoft-store-apppublisher@v1.1 
