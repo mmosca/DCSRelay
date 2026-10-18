@@ -6,6 +6,9 @@ DCSRelay listens for DCS-BIOS multicast messages and relays the received data st
 
 [![Discord](https://img.shields.io/badge/Discord-Join%20our%20server-5865F2?logo=discord&logoColor=white)](https://discord.gg/fA3BHU8kcH)
 
+
+[![Download DCSRelay From The Microsoft Store](https://get.microsoft.com/images/en-us%20dark.svg)](https://get.microsoft.com/installer/download/9ph7hvjpn8b1?referrer=appbadge)
+
 Other similar applications:
 
 [TekConnect](https://github.com/tekcreations/TekConnect) by TekCreations (closed source).
