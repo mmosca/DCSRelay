@@ -39,7 +39,7 @@ namespace DCSRelay.Services
                     return new List<string>();
                 }
 
-                var jsonContent = await File.ReadAllTextAsync(_configFilePath);
+                var jsonContent = File.ReadAllText(_configFilePath);
                 var config = JsonSerializer.Deserialize<PortConfiguration>(jsonContent);
 
                 return config?.ActivePorts ?? new List<string>();
@@ -64,12 +64,23 @@ namespace DCSRelay.Services
                     Directory.CreateDirectory(_configDirectory);
                 }
 
+                var currentActivePortIds = activePorts
+                    .Select(p => p.DeviceID)
+                    .Where(deviceId => !string.IsNullOrWhiteSpace(deviceId))
+                    .ToList();
+
+                var previouslySavedPortIds = await LoadActivePortsAsync().ConfigureAwait(false);
+                foreach (var previouslySavedPortId in previouslySavedPortIds)
+                {
+                    if (!currentActivePortIds.Contains(previouslySavedPortId, StringComparer.OrdinalIgnoreCase))
+                    {
+                        currentActivePortIds.Add(previouslySavedPortId);
+                    }
+                }
+
                 var config = new PortConfiguration
                 {
-                    ActivePorts = activePorts
-                        .Select(p => p.DeviceID)
-                        .Where(deviceId => !string.IsNullOrWhiteSpace(deviceId))
-                        .ToList(),
+                    ActivePorts = currentActivePortIds,
                     LastSaved = DateTime.Now
                 };
 
