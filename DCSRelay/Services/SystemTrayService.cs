@@ -31,10 +31,7 @@ namespace DCSRelay.Services
             _contextMenu.Items.Add(exitMenuItem);
 
             // Create the notify icon
-            var trayIconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico");
-            var trayIcon = File.Exists(trayIconPath)
-                ? new Icon(trayIconPath)
-                : new Icon(SystemIcons.Application, 40, 40);
+            var trayIcon = LoadTrayIcon();
 
             _notifyIcon = new NotifyIcon
             {
@@ -49,6 +46,27 @@ namespace DCSRelay.Services
 
             // Handle window state changes
             _mainWindow.StateChanged += MainWindow_StateChanged;
+        }
+
+        private static Icon LoadTrayIcon()
+        {
+            var trayIconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico");
+            if (File.Exists(trayIconPath))
+            {
+                return new Icon(trayIconPath);
+            }
+
+            var resourceUri = new Uri("pack://application:,,,/Assets/AppIcon.ico", UriKind.Absolute);
+            var resourceStream = System.Windows.Application.GetResourceStream(resourceUri);
+            if (resourceStream?.Stream != null)
+            {
+                using (resourceStream.Stream)
+                {
+                    return (Icon)new Icon(resourceStream.Stream).Clone();
+                }
+            }
+
+            return new Icon(SystemIcons.Application, 40, 40);
         }
 
         private void MainWindow_StateChanged(object? sender, EventArgs e)
