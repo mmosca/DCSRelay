@@ -27,7 +27,7 @@ jobs:
       with:
         ref: main
 
-    - name: Resolve release artifact metadata
+    - name: Resolve store release artifact metadata
       id: artifact_meta
       uses: actions/github-script@v7
       with:
@@ -54,6 +54,34 @@ jobs:
           core.setOutput('artifact_name', artifact.name);
           core.setOutput('version', version);
 
+    - name: Resolve standalone release artifact metadata
+      id: artifact_meta
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const run_id = context.payload.workflow_run.id;
+
+          const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+            owner,
+            repo,
+            run_id,
+            per_page: 100
+          });
+
+          const artifact = artifacts.find(a => /^DCSRelay-(\d+)\.(\d+)\.(\d+)-Release$/.test(a.name));
+          if (!artifact) {
+            core.setFailed('Could not find Release artifact from dotnet-desktop workflow run.');
+            return;
+          }
+
+          const versionMatch = artifact.name.match(/^DCSRelay-(\d+)\.(\d+)\.(\d+)-Release$/);
+          const version = versionMatch?.[1] ?? `${context.payload.workflow_run.run_number}`;
+
+          core.setOutput('standalone_artifact_name', artifact.name);
+          core.setOutput('standalone_version', version);
+
+
     - name: Download Release MSIX artifact
       uses: dawidd6/action-download-artifact@v6
       with:
@@ -62,6 +90,16 @@ jobs:
         name: ${{ steps.artifact_meta.outputs.artifact_name }}
         path: artifacts
         if_no_artifact_found: fail
+
+    - name: Download Release Standalone artifact
+      uses: dawidd6/action-download-artifact@v6
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        run_id: ${{ github.event.workflow_run.id }}
+        name: ${{ steps.artifact_meta.outputs.standalone_artifact_name }}
+        path: artifacts
+        if_no_artifact_found: fail
+        skip_unpack: true
 
     - name: Locate package file
       shell: pwsh
@@ -83,10 +121,10 @@ jobs:
     - name: Locate release file
       shell: pwsh
       run: |
-        $package = Get-ChildItem -Path artifacts -Recurse -File -Include *.appxbundle,*.msixbundle,*.appx,*.msix | Select-Object -First 1
+        $package = Get-ChildItem -Path artifacts -Recurse -File -Include *.zip | Select-Object -First 1
 
         if ($null -eq $package) {
-          throw 'No .appxupload, .msixupload, .appxbundle, .msixbundle, .appx, or .msix package found in downloaded artifacts.'
+          throw 'No .zip package found in downloaded artifacts.'
         }
 
         "RELEASE_PATH=$($package.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
