@@ -228,6 +228,21 @@ namespace DCSRelay.ViewModels
             System.Diagnostics.Debug.WriteLine($"Relay service updated with {activePortsList.Count} active ports.");
         }
 
+        public bool IsSavedActiveDevice(string? deviceId)
+        {
+            if (string.IsNullOrWhiteSpace(deviceId) || _savedDeviceIds == null || _savedDeviceIds.Count == 0)
+            {
+                return false;
+            }
+
+            return _savedDeviceIds.Contains(deviceId, StringComparer.OrdinalIgnoreCase);
+        }
+
+        public void NotifyActivePortsChanged()
+        {
+            UpdateRelayService();
+        }
+
         internal void SortAvailablePorts()
         {
             SortPortCollection(AvailablePorts);
@@ -287,9 +302,6 @@ namespace DCSRelay.ViewModels
 
                         System.Diagnostics.Debug.WriteLine($"Restored {savedPorts.Count} previously active ports.");
                         UpdateRelayService();
-
-                        // Clear the saved device ids after restoration
-                        _savedDeviceIds = null;
                     }
 
                     SortPortLists();

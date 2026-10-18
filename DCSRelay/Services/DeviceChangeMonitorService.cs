@@ -1,6 +1,7 @@
 using System;
 using System.Management;
 using System.Windows;
+using DCSRelay.Models;
 using DCSRelay.ViewModels;
 
 namespace DCSRelay.Services
@@ -123,17 +124,39 @@ namespace DCSRelay.Services
                         }
 
                         // Add new ports
+                        var autoActivatedCount = 0;
                         foreach (var port in ports)
                         {
                             if (!_viewModel.AvailablePorts.Any(p => p.PortName == port.PortName) &&
-                                                            !_viewModel.ActivePorts.Any(p => p.PortName == port.PortName))
+                                !_viewModel.ActivePorts.Any(p => p.PortName == port.PortName))
                             {
-                                _viewModel.AvailablePorts.Add(port);
-                                System.Diagnostics.Debug.WriteLine($"Added new port: {port.PortName}");
+                                if (_viewModel.IsSavedActiveDevice(port.DeviceID))
+                                {
+                                    _viewModel.ActivePorts.Add(port);
+                                    autoActivatedCount++;
+                                    System.Diagnostics.Debug.WriteLine($"Auto-activated saved port: {port.PortName}");
+                                }
+                                else
+                                {
+                                    _viewModel.AvailablePorts.Add(port);
+                                    System.Diagnostics.Debug.WriteLine($"Added new port: {port.PortName}");
+                                }
                             }
                         }
 
                         _viewModel.SortAvailablePorts();
+                        if (autoActivatedCount > 0)
+                        {
+                            var sortedActive = _viewModel.ActivePorts.OrderBy(port => port.PortName, PortNameComparer.Instance).ToList();
+                            _viewModel.ActivePorts.Clear();
+                            foreach (var activePort in sortedActive)
+                            {
+                                _viewModel.ActivePorts.Add(activePort);
+                            }
+
+                            _viewModel.NotifyActivePortsChanged();
+                        }
+
                         System.Diagnostics.Debug.WriteLine($"Port list refreshed. Total available: {_viewModel.AvailablePorts.Count}");
                     });
                 }
