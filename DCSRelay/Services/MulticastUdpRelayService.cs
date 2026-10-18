@@ -298,10 +298,16 @@ namespace DCSRelay.Services
             {
                 lock (session.WriteLock)
                 {
-                    if (session.Port.IsOpen)
+                    if (!session.Port.IsOpen)
                     {
-                        session.Port.Write(data, 0, data.Length);
+                        if (!session.TryReconnect())
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Skipping write to {session.Port.PortName}: port is closed and reconnect failed.");
+                            return;
+                        }
                     }
+
+                    session.Port.Write(data, 0, data.Length);
                 }
 
                 System.Diagnostics.Debug.WriteLine($"Relayed {data.Length} bytes to {session.Port.PortName}");
@@ -309,6 +315,9 @@ namespace DCSRelay.Services
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error writing to {session.Port.PortName}: {ex.Message}");
+
+                // Best-effort recovery for transient disconnects.
+                session.TryReconnect(force: true);
             }
         }
 
@@ -401,18 +410,60 @@ namespace DCSRelay.Services
         {
             private readonly System.Text.StringBuilder _pending = new System.Text.StringBuilder();
             private readonly object _readLock = new object();
+            private readonly object _reconnectLock = new object();
+            private readonly string _portName;
+            private readonly Action<SerialSession> _onData;
 
-            public SerialPort Port { get; }
+            public SerialPort Port { get; private set; }
             public object WriteLock { get; } = new object();
 
             public SerialSession(string portName, Action<SerialSession> onData)
             {
+                _portName = portName;
+                _onData = onData;
+                Port = OpenWithFallback(_portName, _onData, this);
+            }
+
+            public bool TryReconnect(bool force = false)
+            {
+                lock (_reconnectLock)
+                {
+                    try
+                    {
+                        if (!force && Port.IsOpen)
+                        {
+                            return true;
+                        }
+
+                        try
+                        {
+                            Port.Dispose();
+                        }
+                        catch
+                        {
+                        }
+
+                        Port = OpenWithFallback(_portName, _onData, this);
+                        System.Diagnostics.Debug.WriteLine($"Reconnected {_portName}.");
+                        return Port.IsOpen;
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Reconnect failed for {_portName}: {ex.Message}");
+                        return false;
+                    }
+                }
+            }
+
+            private static SerialPort OpenWithFallback(string portName, Action<SerialSession> onData, SerialSession owner)
+            {
                 var port = CreatePort(portName, 250000);
-                port.DataReceived += (_, _) => onData(this);
+                port.DataReceived += (_, _) => onData(owner);
 
                 try
                 {
                     port.Open();
+                    return port;
                 }
                 catch (Exception firstOpenException)
                 {
@@ -425,13 +476,12 @@ namespace DCSRelay.Services
                     catch
                     {
                     }
-
-                    port = CreatePort(portName, 115200);
-                    port.DataReceived += (_, _) => onData(this);
-                    port.Open();
                 }
 
-                Port = port;
+                port = CreatePort(portName, 115200);
+                port.DataReceived += (_, _) => onData(owner);
+                port.Open();
+                return port;
             }
 
             private static SerialPort CreatePort(string portName, int baudRate)
