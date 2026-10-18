@@ -9,6 +9,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using DCSRelay.ViewModels;
 using DCSRelay.Services;
+using System.Diagnostics;
 
 namespace DCSRelay;
 
@@ -169,6 +170,28 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error opening preferences: {ex.Message}");
+        }
+    }
+
+    private void OnHelpProjectGitHubClicked(object sender, RoutedEventArgs e)
+    {
+        OpenUrl("https://github.com/mmosca/DCSRelay");
+    }
+
+    private void OnHelpSponsorClicked(object sender, RoutedEventArgs e)
+    {
+        OpenUrl("https://github.com/sponsors/mmosca");
+    }
+
+    private void OpenUrl(string url)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error opening URL '{url}': {ex.Message}");
         }
     }
 

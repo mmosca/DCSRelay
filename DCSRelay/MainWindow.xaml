@@ -20,6 +20,9 @@
                 <MenuItem Header="Preferences" Click="OnEditPreferencesClicked" />
             </MenuItem>
             <MenuItem Header="Help">
+                <MenuItem Header="DCSRelay on GitHub" Click="OnHelpProjectGitHubClicked" />
+                <MenuItem Header="Sponsor this project" Click="OnHelpSponsorClicked" />
+                <Separator />
                 <MenuItem Header="About" Click="OnHelpAboutClicked" />
             </MenuItem>
         </Menu>
