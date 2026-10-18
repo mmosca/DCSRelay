@@ -21,6 +21,8 @@
             </MenuItem>
             <MenuItem Header="Help">
                 <MenuItem Header="DCSRelay on GitHub" Click="OnHelpProjectGitHubClicked" />
+                <MenuItem Header="DCSRelay Discord server" Click="OnHelpDiscordClicked" />
+                <MenuItem Header="DCSRelay on Microsoft Store" Click="OnHelpMicrosoftStoreClicked" />
                 <MenuItem Header="Sponsor this project" Click="OnHelpSponsorClicked" />
                 <Separator />
                 <MenuItem Header="About" Click="OnHelpAboutClicked" />

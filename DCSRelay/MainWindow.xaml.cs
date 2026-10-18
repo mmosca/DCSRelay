@@ -183,6 +183,16 @@ public partial class MainWindow : Window
         OpenUrl("https://github.com/sponsors/mmosca");
     }
 
+    private void OnHelpDiscordClicked(object sender, RoutedEventArgs e)
+    {
+        OpenUrl("https://discord.gg/fA3BHU8kcH");
+    }
+
+    private void OnHelpMicrosoftStoreClicked(object sender, RoutedEventArgs e)
+    {
+        OpenUrl("https://apps.microsoft.com/detail/9ph7hvjpn8b1?ocid=webpdpshare");
+    }
+
     private void OpenUrl(string url)
     {
         try
