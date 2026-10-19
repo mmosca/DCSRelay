@@ -34,7 +34,7 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$" uap18:TrustLevel="mediumIL" uap18:RuntimeBehavior="win32App">
       <Extensions>
-          <desktop:Extension Category="windows.startupTask" Executable="DCSRelay.exe" EntryPoint="Windows.FullTrustApplication">
+          <desktop:Extension Category="windows.startupTask" Executable="DCSRelay\DCSRelay.exe" EntryPoint="Windows.FullTrustApplication">
               <desktop:StartupTask TaskId="DCSRelayStartupTask" Enabled="true" DisplayName="My App Name" />
           </desktop:Extension>
       </Extensions>
