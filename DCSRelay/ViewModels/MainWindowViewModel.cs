@@ -51,13 +51,11 @@ namespace DCSRelay.ViewModels
             set
             {
                 this._portDiscoveryService = value;
-                if (value != null) { 
-                    this._portDiscoveryService.DiscoverPortsAsync().ContinueWith(this.PopulatePorts); 
-                }
                 OnPropertyChanged();
             }
         }
 
+        public Task InitializationTask { get; private set; }
         public MainWindowViewModel(IPortDiscoveryService portDiscoveryService, IMulticastUdpRelayService relayService, IPortConfigurationService portConfigurationService)
         {
             this.AvailablePorts = new ObservableCollection<HardwareDeviceInfo>();
@@ -68,7 +66,6 @@ namespace DCSRelay.ViewModels
             MovePortRightCommand = new RelayCommand(MovePortRight);
             this._relayService = relayService;
             this._portConfigurationService = portConfigurationService;
-            this.PortDiscoveryService = portDiscoveryService;
 
             // Initialize status
             _bytesReceivedOnMulticast = 0;
@@ -78,8 +75,22 @@ namespace DCSRelay.ViewModels
             this._relayService.DataRelayed += OnDataRelayed;
             this._relayService.ErrorOccurred += OnRelayServiceError;
 
-            // Start the relay service and load saved port configuration when the view model is initialized
-            _ = InitializeAsync();
+            // Capture the initialization task
+            InitializationTask = InitializeAndPopulateAsync(portDiscoveryService);
+        }
+
+        private async Task InitializeAndPopulateAsync(IPortDiscoveryService portDiscoveryService)
+        {
+            try 
+            {
+                await InitializeAsync();
+                // Trigger port population and wait for it to finish
+                await PopulatePortsAsync(portDiscoveryService);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Initialization failed: {ex.Message}");
+            }
         }
 
         private async Task InitializeAsync()
@@ -131,20 +142,32 @@ namespace DCSRelay.ViewModels
 
         private void OnDataRelayed(object? sender, RelayEventArgs e)
         {
-            // Update bytes counter from the UI thread
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            Action updateAction = () => { BytesReceivedOnMulticast += e.BytesRelayed; };
+            if (System.Windows.Application.Current?.Dispatcher != null)
             {
-                BytesReceivedOnMulticast += e.BytesRelayed;
-            });
+                System.Windows.Application.Current.Dispatcher.Invoke(updateAction);
+            }
+            else
+            {
+                updateAction();
+            }
         }
 
         private void OnRelayServiceError(object? sender, System.IO.ErrorEventArgs e)
         {
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            Action updateAction = () =>
             {
                 RelayServiceStatus = $"Relay: Error";
                 System.Diagnostics.Debug.WriteLine($"Relay service error: {e.GetException()?.Message}");
-            });
+            };
+            if (System.Windows.Application.Current?.Dispatcher != null)
+            {
+                System.Windows.Application.Current.Dispatcher.Invoke(updateAction);
+            }
+            else
+            {
+                updateAction();
+            }
         }
 
         // Data Collections
@@ -267,49 +290,53 @@ namespace DCSRelay.ViewModels
             }
         }
 
-        private void PopulatePorts(Task<List<HardwareDeviceInfo>> task)
+        private async Task PopulatePortsAsync(IPortDiscoveryService portDiscoveryService)
         {
-            if (task.IsCompletedSuccessfully)
+            this._portDiscoveryService = portDiscoveryService;
+            var ports = await portDiscoveryService.DiscoverPortsAsync();
+
+            Action updateAction = () =>
             {
-                var ports = task.Result;
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                AvailablePorts.Clear();
+                foreach (var port in ports)
                 {
-                    AvailablePorts.Clear();
-                    foreach (var port in ports)
+                    AvailablePorts.Add(port);
+                }
+
+                // Restore previously saved active ports if available
+                if (_savedDeviceIds != null && _savedDeviceIds.Count > 0)
+                {
+                    var savedPorts = new List<HardwareDeviceInfo>();
+                    foreach (var savedDeviceId in _savedDeviceIds)
                     {
-                        AvailablePorts.Add(port);
+                        var matchingPort = AvailablePorts.FirstOrDefault(p => p.DeviceID == savedDeviceId);
+                        if (matchingPort != null)
+                        {
+                            savedPorts.Add(matchingPort);
+                        }
                     }
 
-                    // Restore previously saved active ports if available
-                    if (_savedDeviceIds != null && _savedDeviceIds.Count > 0)
+                    // Move saved ports to active list
+                    foreach (var port in savedPorts)
                     {
-                        var savedPorts = new List<HardwareDeviceInfo>();
-                        foreach (var savedDeviceId in _savedDeviceIds)
-                        {
-                            var matchingPort = AvailablePorts.FirstOrDefault(p => p.DeviceID == savedDeviceId);
-                            if (matchingPort != null)
-                            {
-                                savedPorts.Add(matchingPort);
-                            }
-                        }
-
-                        // Move saved ports to active list
-                        foreach (var port in savedPorts)
-                        {
-                            AvailablePorts.Remove(port);
-                            ActivePorts.Add(port);
-                        }
-
-                        System.Diagnostics.Debug.WriteLine($"Restored {savedPorts.Count} previously active ports.");
-                        UpdateRelayService();
+                        AvailablePorts.Remove(port);
+                        ActivePorts.Add(port);
                     }
 
-                    SortPortLists();
-                });
+                    System.Diagnostics.Debug.WriteLine($"Restored {savedPorts.Count} previously active ports.");
+                    UpdateRelayService();
+                }
+
+                SortPortLists();
+            };
+
+            if (System.Windows.Application.Current?.Dispatcher != null)
+            {
+                System.Windows.Application.Current.Dispatcher.Invoke(updateAction);
             }
             else
             {
-                // Handle error (log, notify user, etc.)
+                updateAction();
             }
         }
     }

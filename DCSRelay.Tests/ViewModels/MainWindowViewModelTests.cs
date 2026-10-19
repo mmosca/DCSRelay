@@ -7,22 +7,71 @@ namespace DCSRelay.Tests.ViewModels;
 public class MainWindowViewModelTests
 {
     [Fact]
-    public void Constructor_starts_port_discovery_and_loads_saved_configuration()
+    public async Task InitializeAsync_SuccessfulStart_SetsStatusRunning()
+    {
+        var relayService = new FakeRelayService();
+        var viewModel = CreateViewModel(relayService: relayService);
+
+        await viewModel.InitializationTask;
+
+        Assert.Equal("Relay: Running", viewModel.RelayServiceStatus);
+    }
+
+    [Fact]
+    public async Task InitializeAsync_FailedStart_SetsStatusError()
+    {
+        var relayService = new FakeRelayService { ShouldFailStart = true };
+        var viewModel = CreateViewModel(relayService: relayService);
+
+        await viewModel.InitializationTask;
+
+        Assert.Contains("Relay: Error", viewModel.RelayServiceStatus);
+    }
+
+    [Fact]
+    public async Task PopulatePorts_RestoresSavedPortsCorrectly()
+    {
+        var portDiscovery = new FakePortDiscoveryService();
+        var portConfig = new FakePortConfigurationService();
+
+        var com1 = new HardwareDeviceInfo { PortName = "COM1", DeviceID = "DEV1" };
+        var com2 = new HardwareDeviceInfo { PortName = "COM2", DeviceID = "DEV2" };
+        var com3 = new HardwareDeviceInfo { PortName = "COM3", DeviceID = "DEV3" };
+
+        portDiscovery.DiscoveryResult = new List<HardwareDeviceInfo> { com1, com2, com3 };
+        portConfig.SavedPortsResult = new List<string> { "DEV1", "DEV3" };
+
+        var viewModel = CreateViewModel(portDiscovery, new FakeRelayService(), portConfig);
+
+        await viewModel.InitializationTask;
+
+        Assert.Equal(2, viewModel.ActivePorts.Count);
+        Assert.Contains(com1, viewModel.ActivePorts);
+        Assert.Contains(com3, viewModel.ActivePorts);
+        Assert.Single(viewModel.AvailablePorts);
+        Assert.Contains(com2, viewModel.AvailablePorts);
+    }
+
+    [Fact]
+    public async Task Constructor_starts_port_discovery_and_loads_saved_configuration()
     {
         var portDiscovery = new FakePortDiscoveryService();
         var portConfiguration = new FakePortConfigurationService();
 
-        _ = CreateViewModel(portDiscovery, new FakeRelayService(), portConfiguration);
+        var viewModel = CreateViewModel(portDiscovery, new FakeRelayService(), portConfiguration);
+        await viewModel.InitializationTask;
 
         Assert.Equal(1, portDiscovery.DiscoverPortsCallCount);
         Assert.Equal(1, portConfiguration.LoadActivePortsCallCount);
     }
 
     [Fact]
-    public void MovePortRightCommand_moves_selected_ports_and_sorts_both_lists()
+    public async Task MovePortRightCommand_moves_selected_ports_and_sorts_both_lists()
     {
         var relayService = new FakeRelayService();
         var viewModel = CreateViewModel(relayService: relayService);
+        await viewModel.InitializationTask;
+
         var com10 = CreatePort("COM10");
         var com1 = CreatePort("COM1");
         var com2 = CreatePort("COM2");
@@ -72,8 +121,8 @@ public class MainWindowViewModelTests
 
         viewModel.BytesReceivedOnMulticast = 42;
         viewModel.BytesReceivedOnMulticast = 42;
-        viewModel.RelayServiceStatus = "Relay: Running";
-        viewModel.RelayServiceStatus = "Relay: Running";
+        viewModel.RelayServiceStatus = "Relay: Custom Status";
+        viewModel.RelayServiceStatus = "Relay: Custom Status";
 
         Assert.Equal(new[] { "BytesReceivedOnMulticast", "RelayServiceStatus" }, changedProperties);
     }
@@ -93,29 +142,25 @@ public class MainWindowViewModelTests
 
     private sealed class FakePortDiscoveryService : IPortDiscoveryService
     {
-        private readonly TaskCompletionSource<List<HardwareDeviceInfo>> _discovery = new(
-            TaskCreationOptions.RunContinuationsAsynchronously);
-
+        public List<HardwareDeviceInfo> DiscoveryResult { get; set; } = [];
         public int DiscoverPortsCallCount { get; private set; }
 
         public Task<List<HardwareDeviceInfo>> DiscoverPortsAsync()
         {
             DiscoverPortsCallCount++;
-            return _discovery.Task;
+            return Task.FromResult(DiscoveryResult);
         }
     }
 
     private sealed class FakePortConfigurationService : IPortConfigurationService
     {
-        private readonly TaskCompletionSource<List<string>> _savedPorts = new(
-            TaskCreationOptions.RunContinuationsAsynchronously);
-
+        public List<string> SavedPortsResult { get; set; } = [];
         public int LoadActivePortsCallCount { get; private set; }
 
         public Task<List<string>> LoadActivePortsAsync()
         {
             LoadActivePortsCallCount++;
-            return _savedPorts.Task;
+            return Task.FromResult(SavedPortsResult);
         }
 
         public Task SaveActivePortsAsync(List<HardwareDeviceInfo> activePorts) => Task.CompletedTask;
@@ -123,7 +168,8 @@ public class MainWindowViewModelTests
 
     private sealed class FakeRelayService : IMulticastUdpRelayService
     {
-        public bool IsRunning => false;
+        public bool IsRunning { get; set; } = false;
+        public bool ShouldFailStart { get; set; } = false;
         public List<HardwareDeviceInfo> LastUpdatedPorts { get; private set; } = [];
         public int UpdateActivePortsCallCount { get; private set; }
 
@@ -139,7 +185,15 @@ public class MainWindowViewModelTests
             remove { }
         }
 
-        public Task StartAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task StartAsync(CancellationToken cancellationToken = default)
+        {
+            if (ShouldFailStart)
+            {
+                return Task.FromException(new Exception("Start failed"));
+            }
+            IsRunning = true;
+            return Task.CompletedTask;
+        }
         public Task StopAsync() => Task.CompletedTask;
         public void UpdateActivePorts(List<HardwareDeviceInfo> ports)
         {
