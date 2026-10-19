@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using Microsoft.Win32;
 
 namespace DCSRelay.Services
@@ -44,7 +43,8 @@ namespace DCSRelay.Services
 
                 if (enabled)
                 {
-                    var executablePath = Assembly.GetEntryAssembly()?.Location;
+                    var folder = System.AppContext.BaseDirectory;
+                    var executablePath = System.IO.Path.Combine(folder, "DCSRelay.exe");
                     if (!string.IsNullOrWhiteSpace(executablePath))
                     {
                         key.SetValue(StartupValueName, $"\"{executablePath}\"");
