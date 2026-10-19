@@ -26,10 +26,13 @@ namespace DCSRelay.Services
         public bool StartWithWindows { get; set; } = false;
         public string DcsBiosCommandAddress { get; set; } = "127.0.0.1:7778";
 
-        public AppConfigurationService()
+        public AppConfigurationService() : this(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), AppDataFolderName))
         {
-            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            _configDirectory = Path.Combine(appDataPath, AppDataFolderName);
+        }
+
+        public AppConfigurationService(string configDirectory)
+        {
+            _configDirectory = configDirectory;
             _configFilePath = Path.Combine(_configDirectory, ConfigFileName);
 
             // Kick off async load in background to avoid blocking constructor / UI thread

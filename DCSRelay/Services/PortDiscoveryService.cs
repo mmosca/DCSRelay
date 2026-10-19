@@ -11,13 +11,14 @@ namespace DCSRelay.Services
     /// </summary>
     public class PortDiscoveryService : IPortDiscoveryService
     {
-        // New Dependency: HardwarePortLookupService
-        private readonly HardwarePortLookupService _hardwareLookupService;
+        // Dependencies
+        private readonly IHardwarePortLookupService _hardwareLookupService;
+        private readonly ISerialPortProvider _portProvider;
 
-        public PortDiscoveryService()
+        public PortDiscoveryService(IHardwarePortLookupService hardwareLookupService, ISerialPortProvider portProvider)
         {
-            // Assuming a simple instantiation for the service dependency
-            _hardwareLookupService = new HardwarePortLookupService();
+            _hardwareLookupService = hardwareLookupService;
+            _portProvider = portProvider;
         }
 
         /// <summary>
@@ -28,9 +29,8 @@ namespace DCSRelay.Services
         {
             try
             {
-                // SerialPort.GetPortNames() is thread-safe and provides all available names.
-                // Wrap it in Task.Run to prevent blocking the UI thread if this method is called from a UI context.
-                var portNames = await Task.Run(() => SerialPort.GetPortNames().Distinct(System.StringComparer.OrdinalIgnoreCase).ToArray());
+                // Use the provider to get port names to allow for mocking in unit tests
+                var portNames = await Task.Run(() => _portProvider.GetPortNames().Distinct(System.StringComparer.OrdinalIgnoreCase).ToArray());
 
                 List<HardwareDeviceInfo> ports = new List<HardwareDeviceInfo>();
 

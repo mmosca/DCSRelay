@@ -18,11 +18,13 @@ namespace DCSRelay.Services
         private const string ConfigFileName = "port-config.json";
         private const string AppDataFolderName = "DCSRelay";
 
-        public PortConfigurationService()
+        public PortConfigurationService() : this(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), AppDataFolderName))
         {
-            // Get LocalAppData path (e.g., C:\Users\<username>\AppData\Local)
-            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            _configDirectory = Path.Combine(appDataPath, AppDataFolderName);
+        }
+
+        public PortConfigurationService(string configDirectory)
+        {
+            _configDirectory = configDirectory;
             _configFilePath = Path.Combine(_configDirectory, ConfigFileName);
         }
 

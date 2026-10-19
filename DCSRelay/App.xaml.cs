@@ -150,6 +150,7 @@ public partial class App : System.Windows.Application
         // Register core services
         services.AddSingleton<Services.IPortDiscoveryService, Services.PortDiscoveryService>();
         services.AddSingleton<Services.IHardwarePortLookupService, Services.HardwarePortLookupService>();
+        services.AddSingleton<Services.ISerialPortProvider, Services.SerialPortProvider>();
         services.AddSingleton<Services.IMulticastUdpRelayService, Services.MulticastUdpRelayService>();
         // App configuration service for storing user preferences
         services.AddSingleton<Services.IAppConfigurationService, Services.AppConfigurationService>();
