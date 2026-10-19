@@ -147,6 +147,9 @@ public partial class App : System.Windows.Application
 
     private void ConfigureServices(IServiceCollection services)
     {
+        // Register communication factory for network and serial abstractions
+        services.AddSingleton<Services.ICommunicationFactory, Services.CommunicationFactory>();
+
         // Register core services
         services.AddSingleton<Services.IPortDiscoveryService, Services.PortDiscoveryService>();
         services.AddSingleton<Services.IHardwarePortLookupService, Services.HardwarePortLookupService>();

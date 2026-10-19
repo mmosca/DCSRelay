@@ -20,42 +20,33 @@ namespace DCSRelay.Services
         private const int MulticastPort = 5010;
         private const int BufferSize = 4096;
 
-        // DCS-BIOS (Skunkworks) receives text commands (e.g. "MASTER_ARM 1\n") over UDP on this port
         private const int DcsBiosCommandPort = 7778;
         private const int MaxPendingLineLength = 1024;
 
         private readonly Dictionary<string, SerialSession> _sessions = new Dictionary<string, SerialSession>(StringComparer.OrdinalIgnoreCase);
-        private UdpClient? _commandClient;
+        private IUdpClientWrapper? _commandClient;
         private readonly Services.IAppConfigurationService _appConfigService;
+        private readonly ICommunicationFactory _commFactory;
 
         private readonly List<HardwareDeviceInfo> _activePorts;
         private readonly object _portsLock = new object();
 
-        private UdpClient? _udpClient;
+        private IUdpClientWrapper? _udpClient;
         private CancellationTokenSource? _cancellationTokenSource;
         private Task? _listenerTask;
         private bool _isRunning;
 
-        /// <summary>
-        /// Gets a value indicating whether the relay service is actively listening.
-        /// </summary>
         public bool IsRunning => _isRunning;
 
-        /// <summary>
-        /// Event fired when a UDP packet is received and relayed to serial ports.
-        /// </summary>
         public event EventHandler<RelayEventArgs>? DataRelayed;
-
-        /// <summary>
-        /// Event fired when an error occurs during relay operations.
-        /// </summary>
         public event EventHandler<System.IO.ErrorEventArgs>? ErrorOccurred;
 
-        public MulticastUdpRelayService(Services.IAppConfigurationService appConfigService)
+        public MulticastUdpRelayService(Services.IAppConfigurationService appConfigService, ICommunicationFactory commFactory)
         {
             _activePorts = new List<HardwareDeviceInfo>();
             _isRunning = false;
             _appConfigService = appConfigService ?? throw new ArgumentNullException(nameof(appConfigService));
+            _commFactory = commFactory ?? throw new ArgumentNullException(nameof(commFactory));
         }
 
         private static IPEndPoint ParseCommandEndpoint(string? address)
@@ -92,19 +83,16 @@ namespace DCSRelay.Services
             try
             {
                 _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                _udpClient = new UdpClient();
-                _udpClient.ExclusiveAddressUse = false;
+                _udpClient = _commFactory.CreateUdpClient();
+                _udpClient.SetReuseAddress(true);
 
-                // Bind to the multicast port on any interface
                 var localEndpoint = new IPEndPoint(IPAddress.Any, MulticastPort);
-                _udpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                _udpClient.Client.Bind(localEndpoint);
+                _udpClient.Bind(localEndpoint);
 
-                // Join the multicast group
                 var multicastAddress = IPAddress.Parse(MulticastAddress);
                 _udpClient.JoinMulticastGroup(multicastAddress, IPAddress.Any);
 
-                _commandClient = new UdpClient();
+                _commandClient = _commFactory.CreateUdpClient();
 
                 _isRunning = true;
                 lock (_portsLock)
@@ -136,9 +124,6 @@ namespace DCSRelay.Services
             _isRunning = false;
             _cancellationTokenSource?.Cancel();
 
-            // Closing the socket guarantees the pending ReceiveAsync is aborted
-            //_udpClient?.Dispose();
-
             if (_listenerTask != null)
             {
                 try
@@ -147,7 +132,6 @@ namespace DCSRelay.Services
                 }
                 catch (Exception ex) when (ex is OperationCanceledException || ex is TimeoutException)
                 {
-                    // Expected when cancellation is requested (or listener is slow to finish)
                 }
             }
 
@@ -223,8 +207,7 @@ namespace DCSRelay.Services
         private async Task ListenForMulticastAsync(CancellationToken cancellationToken)
         {
             byte[] buffer = new byte[BufferSize];
-            var socket = _udpClient?.Client;
-            if (socket == null)
+            if (_udpClient == null)
             {
                 return;
             }
@@ -235,29 +218,24 @@ namespace DCSRelay.Services
                 {
                     try
                     {
-                        // Fully asynchronous receive; cancellation aborts the pending operation
-                        var result = await socket.ReceiveAsync(buffer, SocketFlags.None, cancellationToken).ConfigureAwait(false);
-                        if (result > 0)
+                        var result = await _udpClient.ReceiveAsync(cancellationToken).ConfigureAwait(false);
+                        if (result.Buffer.Length > 0)
                         {
-                            var data = buffer.AsSpan(0, result).ToArray();
+                            var data = result.Buffer;
 
-                            // Relay to all active serial ports
                             await RelayToSerialPortsAsync(data).ConfigureAwait(false);
 
-                            // Fire event for logging/monitoring
                             DataRelayed?.Invoke(this, new RelayEventArgs(data.Length));
                         }
                     }
                     catch (OperationCanceledException)
                     {
-                        // Expected during shutdown
                         break;
                     }
                 }
             }
             catch (Exception ex) when (cancellationToken.IsCancellationRequested && (ex is ObjectDisposedException || ex is SocketException))
             {
-                // Socket was closed during shutdown
             }
             catch (Exception ex)
             {
@@ -352,7 +330,7 @@ namespace DCSRelay.Services
 
                 try
                 {
-                    _sessions[name] = new SerialSession(name, OnSerialDataReceived);
+                    _sessions[name] = new SerialSession(name, _commFactory, OnSerialDataReceived);
                 }
                 catch (Exception ex)
                 {
@@ -398,7 +376,6 @@ namespace DCSRelay.Services
             }
             catch (ObjectDisposedException)
             {
-                // Service is stopping
             }
             catch (Exception ex)
             {
@@ -413,15 +390,17 @@ namespace DCSRelay.Services
             private readonly object _reconnectLock = new object();
             private readonly string _portName;
             private readonly Action<SerialSession> _onData;
+            private readonly ICommunicationFactory _commFactory;
 
-            public SerialPort Port { get; private set; }
+            public ISerialPortWrapper Port { get; private set; }
             public object WriteLock { get; } = new object();
 
-            public SerialSession(string portName, Action<SerialSession> onData)
+            public SerialSession(string portName, ICommunicationFactory commFactory, Action<SerialSession> onData)
             {
                 _portName = portName;
+                _commFactory = commFactory;
                 _onData = onData;
-                Port = OpenWithFallback(_portName, _onData, this);
+                Port = OpenWithFallback(_portName, _onData);
             }
 
             public bool TryReconnect(bool force = false)
@@ -443,7 +422,7 @@ namespace DCSRelay.Services
                         {
                         }
 
-                        Port = OpenWithFallback(_portName, _onData, this);
+                        Port = OpenWithFallback(_portName, _onData);
                         System.Diagnostics.Debug.WriteLine($"Reconnected {_portName}.");
                         return Port.IsOpen;
                     }
@@ -455,10 +434,10 @@ namespace DCSRelay.Services
                 }
             }
 
-            private static SerialPort OpenWithFallback(string portName, Action<SerialSession> onData, SerialSession owner)
+            private ISerialPortWrapper OpenWithFallback(string portName, Action<SerialSession> onData)
             {
-                var port = CreatePort(portName, 250000);
-                port.DataReceived += (_, _) => onData(owner);
+                ISerialPortWrapper port = _commFactory.CreateSerialPort(portName, 250000);
+                port.DataReceived += (_, _) => onData(this);
 
                 try
                 {
@@ -478,30 +457,12 @@ namespace DCSRelay.Services
                     }
                 }
 
-                port = CreatePort(portName, 115200);
-                port.DataReceived += (_, _) => onData(owner);
+                port = _commFactory.CreateSerialPort(portName, 115200);
+                port.DataReceived += (_, _) => onData(this);
                 port.Open();
                 return port;
             }
 
-            private static SerialPort CreatePort(string portName, int baudRate)
-            {
-                return new SerialPort(portName)
-                {
-                    BaudRate = baudRate,
-                    Parity = Parity.None,
-                    DataBits = 8,
-                    StopBits = StopBits.One,
-                    Handshake = Handshake.None,
-                    ReadTimeout = 1000,
-                    WriteTimeout = 1000,
-                    RtsEnable = true,
-                    DtrEnable = false,
-                    Encoding = System.Text.Encoding.ASCII
-                };
-            }
-
-            // Returns complete newline-terminated commands; partial lines are buffered.
             public List<string> ReadCommands(int maxPending)
             {
                 var result = new List<string>();
@@ -553,7 +514,6 @@ namespace DCSRelay.Services
                 }
                 catch (Exception)
                 {
-                    // Port may already be gone (e.g. device unplugged)
                 }
             }
         }

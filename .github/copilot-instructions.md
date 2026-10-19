@@ -8,3 +8,5 @@
 - Keep low cpu and memory usage in mind when implementing features
 - Include a plan of action with your replies
 - If your change breaks the build, fix it.
+- Use one file for each C# Class or Interface
+- Match the filename with the class or interface name
