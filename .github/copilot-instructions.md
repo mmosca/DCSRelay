@@ -6,3 +6,4 @@
 - Do not rely on implicit usings
 - `Nullable` are both enabled in `DCSRelay.csproj` — expect nullability analysis to be on.
 - Keep low cpu and memory usage in mind when implementing features
+- Include a plan of action with your replies
