@@ -7,3 +7,4 @@
 - `Nullable` are both enabled in `DCSRelay.csproj` — expect nullability analysis to be on.
 - Keep low cpu and memory usage in mind when implementing features
 - Include a plan of action with your replies
+- If your change breaks the build, fix it.
