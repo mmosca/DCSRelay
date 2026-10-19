@@ -29,10 +29,47 @@ public partial class MainWindow : Window
 
         Icon = SvgIconLoader.LoadFromAssets("AppIcon.svg") ?? Icon;
         ApplyMoveButtonIcons();
+        ApplyHelpMenuIcons();
 
         // Set the ViewModel as the DataContext for data binding
         DataContext = viewModel;
         _viewModel = viewModel;
+    }
+
+    private void ApplyHelpMenuIcons()
+    {
+        var githubIcon = SvgIconLoader.LoadFromAssets("GitHub_Invertocat_Black.svg");
+        if (githubIcon != null)
+        {
+            menuItemGitHub.Icon = new System.Windows.Controls.Image
+            {
+                Source = githubIcon,
+                Width = 16,
+                Height = 16
+            };
+        }
+
+        var discordIcon = SvgIconLoader.LoadFromAssets("Discord-Symbol-Blurple.svg");
+        if (discordIcon != null)
+        {
+            menuItemDiscord.Icon = new System.Windows.Controls.Image
+            {
+                Source = discordIcon,
+                Width = 16,
+                Height = 16
+            };
+        }
+
+        var storeIcon = SvgIconLoader.LoadFromAssets("AppIcon.svg");
+        if (storeIcon != null)
+        {
+            menuItemStore.Icon = new System.Windows.Controls.Image
+            {
+                Source = storeIcon,
+                Width = 16,
+                Height = 16
+            };
+        }
     }
 
     private void ApplyMoveButtonIcons()

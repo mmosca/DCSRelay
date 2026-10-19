@@ -36,6 +36,8 @@
     <Resource Include="Assets\AppIcon.Simplified.svg" />
     <Resource Include="Assets\ArrowRight.svg" />
     <Resource Include="Assets\ArrowLeft.svg" />
+    <Resource Include="Assets\Discord-Symbol-Blurple.svg"/>
+    <Resource Include="Assets\GitHub_Invertocat_Black.svg"/>
   </ItemGroup>
 
   <ItemGroup>
