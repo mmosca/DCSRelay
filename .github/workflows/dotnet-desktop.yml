@@ -64,6 +64,13 @@ jobs:
       AppxVersion: 1.0.${{ github.run_number }}.0                 # Replace with your application version, i.e. 1.0.${{ github.run_number }}.0.
 
     steps:
+
+    - name: Setup Windows SDK
+      uses: GuillaumeFalourd/setup-windows10-sdk-action@v2
+      with:
+        # Pass the specific 5-digit build number (e.g., 22621, 26100, etc.)
+        sdk-version: 17763
+
     - name: Checkout
       uses: actions/checkout@v4
       with:
