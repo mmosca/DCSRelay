@@ -1,15 +1,12 @@
 # DCSRelay
 
-[![CI Build](https://github.com/mmosca/DCSRelay/actions/workflows/dotnet-desktop.yml/badge.svg)](https://github.com/mmosca/DCSRelay/actions/workflows/dotnet-desktop.yml)
+[![CI Build](https://github.com/mmosca/DCSRelay/actions/workflows/dotnet-desktop.yml/badge.svg)](https://github.com/mmosca/DCSRelay/actions/workflows/dotnet-desktop.yml)[![Discord](https://img.shields.io/badge/Discord-Join%20our%20server-5865F2?logo=discord&logoColor=white)](https://discord.gg/fA3BHU8kcH)
+
+[![Download DCSRelay From The Microsoft Store](https://get.microsoft.com/images/en-us%20dark.svg)](https://get.microsoft.com/installer/download/9ph7hvjpn8b1?referrer=appbadge)
 
 An Open Source desktop application for relaying Multicast UDP traffic to local Serial Ports.
 
 DCSRelay listens for DCS-BIOS multicast messages and relays the received data stream to one or more selected serial ports on the host computer so all your shiny custom DCS panels can work with the minimal ammount of effort.
-
-[![Discord](https://img.shields.io/badge/Discord-Join%20our%20server-5865F2?logo=discord&logoColor=white)](https://discord.gg/fA3BHU8kcH)
-
-
-[![Download DCSRelay From The Microsoft Store](https://get.microsoft.com/images/en-us%20dark.svg)](https://get.microsoft.com/installer/download/9ph7hvjpn8b1?referrer=appbadge)
 
 Other similar applications:
 
