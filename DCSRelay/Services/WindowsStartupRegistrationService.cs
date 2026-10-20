@@ -1,10 +1,12 @@
-using System;
 using Microsoft.Win32;
+using System;
+using Windows.ApplicationModel;
 
 namespace DCSRelay.Services
 {
     public interface IWindowsStartupRegistrationService
     {
+        bool IsWindowsStoreApp { get; }
         bool IsEnabled();
         void SetEnabled(bool enabled);
     }
@@ -16,6 +18,12 @@ namespace DCSRelay.Services
 
         public bool IsEnabled()
         {
+            if(this.IsWindowsStoreApp)
+            {
+                // Windows Store apps cannot register for startup in the same way as traditional desktop apps.
+                return false;
+            }
+
             try
             {
                 using var key = Registry.CurrentUser.OpenSubKey(RunRegistryPath, writable: false);
@@ -58,6 +66,22 @@ namespace DCSRelay.Services
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error updating startup registration: {ex.Message}");
+            }
+        }
+
+        public bool IsWindowsStoreApp
+        {
+            get
+            {
+                try
+                {
+                    var currentPackage = Windows.ApplicationModel.Package.Current;
+                    return currentPackage != null && currentPackage.SignatureKind == PackageSignatureKind.Store;
+                }
+                catch
+                {
+                    return false;
+                }
             }
         }
     }

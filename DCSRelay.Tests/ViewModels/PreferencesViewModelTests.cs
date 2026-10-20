@@ -31,6 +31,8 @@ namespace DCSRelay.Tests.ViewModels
             public bool LastEnabledValue { get; private set; }
             public int SetEnabledCallCount { get; private set; }
 
+            public bool IsWindowsStoreApp { get { return false; } }
+
             public bool IsEnabled() => LastEnabledValue;
 
             public void SetEnabled(bool enabled)
