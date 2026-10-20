@@ -65,11 +65,17 @@ jobs:
 
     steps:
 
-    - name: Setup Windows SDK
+    - name: Setup Windows SDK 17763
       uses: GuillaumeFalourd/setup-windows10-sdk-action@v2
       with:
         # Pass the specific 5-digit build number (e.g., 22621, 26100, etc.)
         sdk-version: 17763
+
+    - name: Setup Windows SDK 22621
+      uses: GuillaumeFalourd/setup-windows10-sdk-action@v2
+      with:
+        # Pass the specific 5-digit build number (e.g., 22621, 26100, etc.)
+        sdk-version: 2261
 
     - name: Checkout
       uses: actions/checkout@v4
