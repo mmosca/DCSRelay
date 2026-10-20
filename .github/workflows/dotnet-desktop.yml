@@ -147,7 +147,7 @@ jobs:
       env:
         Configuration: ${{ matrix.configuration }}
       run: |
-        dotnet publish DCSRelay --configuration $env:Configuration --output DCSRelay\bin\${{ matrix.configuration}}\net10.0-windows --self-contained true /p:PublishSingleFile=true /p:PublishTrimmed=false /p:PublishReadyToRun=true /p:Version=$env:Version /p:VersionPrefix=$env:Version
+        dotnet publish DCSRelay --configuration $env:Configuration --output DCSRelay\bin\${{ matrix.configuration}}\net10.0-windows --self-contained true /p:PublishSingleFile=false /p:PublishTrimmed=false /p:PublishReadyToRun=true /p:Version=$env:Version /p:VersionPrefix=$env:Version
 
     # Publish zip file
     - name: Upload ${{ matrix.configuration }} Zip file
