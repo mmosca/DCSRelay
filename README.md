@@ -1,5 +1,7 @@
 # DCSRelay
 
+[![CI Build](https://github.com/mmosca/DCSRelay/actions/workflows/dotnet-desktop.yml/badge.svg)](https://github.com/mmosca/DCSRelay/actions/workflows/dotnet-desktop.yml)
+
 An Open Source desktop application for relaying Multicast UDP traffic to local Serial Ports.
 
 DCSRelay listens for DCS-BIOS multicast messages and relays the received data stream to one or more selected serial ports on the host computer so all your shiny custom DCS panels can work with the minimal ammount of effort.
