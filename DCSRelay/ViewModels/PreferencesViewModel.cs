@@ -28,7 +28,7 @@ namespace DCSRelay.ViewModels
             _configService = configService;
             _startupRegistrationService = startupRegistrationService;
             _startMinimized = _configService.StartMinimized;
-            _startWithWindows = _configService.StartWithWindows;
+            _startWithWindows = _startupRegistrationService.IsWindowsStoreApp ? false : _configService.StartWithWindows;
             _dcsBiosCommandAddress = _configService.DcsBiosCommandAddress ?? string.Empty;
 
             _originalStartMinimized = _startMinimized;
@@ -70,6 +70,8 @@ namespace DCSRelay.ViewModels
                 }
             }
         }
+
+        public bool IsStartWithWindowsEnabled => !_startupRegistrationService.IsWindowsStoreApp;
 
         public string DcsBiosCommandAddress
         {
