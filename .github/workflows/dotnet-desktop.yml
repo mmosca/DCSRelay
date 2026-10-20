@@ -75,7 +75,7 @@ jobs:
       uses: GuillaumeFalourd/setup-windows10-sdk-action@v2
       with:
         # Pass the specific 5-digit build number (e.g., 22621, 26100, etc.)
-        sdk-version: 2261
+        sdk-version: 22621
 
     - name: Checkout
       uses: actions/checkout@v4
