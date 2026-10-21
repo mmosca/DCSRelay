@@ -10,12 +10,12 @@
   IgnorableNamespaces="uap rescap uap18 iot">
 
   <Identity
-    Name="mmosca.DCSRelay"
+    Name="mmosca.SimRelay"
     Publisher="CN=55B7D9B7-7DB0-4859-9694-4385628639CA"
     Version="1.0.0.0" />
 
   <Properties>
-    <DisplayName>DCSRelay</DisplayName>
+    <DisplayName>SimRelay</DisplayName>
     <PublisherDisplayName>mmosca</PublisherDisplayName>
     <Logo>Images\StoreLogo.png</Logo>
   </Properties>
@@ -35,12 +35,12 @@
       EntryPoint="$targetentrypoint$" uap18:TrustLevel="mediumIL" uap18:RuntimeBehavior="win32App">
       <Extensions>
           <desktop:Extension Category="windows.startupTask" Executable="DCSRelay\DCSRelay.exe" EntryPoint="Windows.FullTrustApplication">
-              <desktop:StartupTask TaskId="DCSRelayStartupTask" Enabled="true" DisplayName="DCSRelay" />
+              <desktop:StartupTask TaskId="DCSRelayStartupTask" Enabled="true" DisplayName="SimRelay" />
           </desktop:Extension>
       </Extensions>
       <uap:VisualElements
-        DisplayName="DCSRelay"
-        Description="DCSRelay"
+        DisplayName="SimRelay"
+        Description="SimRelay"
         BackgroundColor="transparent"
         Square150x150Logo="Images\Square150x150Logo.png"
         Square44x44Logo="Images\Square44x44Logo.png">
